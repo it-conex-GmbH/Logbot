@@ -13,6 +13,7 @@
           <li><router-link to="/webhooks" class="flex items-center px-4 py-2 rounded hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'Webhooks' }">🔗 Webhooks</router-link></li>
           <li v-if="auth.isAdmin"><router-link to="/users" class="flex items-center px-4 py-2 rounded hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'Users' }">👥 Benutzer</router-link></li>
           <li><router-link to="/settings" class="flex items-center px-4 py-2 rounded hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'Settings' }">⚙️ Einstellungen</router-link></li>
+          <li><router-link to="/settings/branding" class="flex items-center px-4 py-2 rounded hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'BrandingSettings' }">🎨 Branding</router-link></li>
           <li><router-link to="/health" class="flex items-center px-4 py-2 rounded hover:bg-gray-700" :class="{ 'bg-gray-700': $route.name === 'Health' }">💚 Health</router-link></li>
         </ul>
       </nav>
@@ -29,14 +30,11 @@
     </main>
   </div>
 </template>
-
 <script setup>
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-
 const router = useRouter()
 const auth = useAuthStore()
-
 function handleLogout() {
   auth.logout()
   router.push('/login')

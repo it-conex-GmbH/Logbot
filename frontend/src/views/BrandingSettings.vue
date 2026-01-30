@@ -2,211 +2,279 @@
 ================================================================================
 Name:           Phil Fischer
 E-Mail:         p.fischer@phytech.de
-Version:        30.01.2026.17.45.08
+Version:        30.01.2026.18.38.22
 ================================================================================
 
-LogBot Branding Settings - Admin-Seite für Whitelabel-Konfiguration
-====================================================================
+LogBot Branding Settings - Admin-Seite mit Tailwind CSS
+========================================================
 
 ================================================================================
 -->
 
 <template>
-  <div class="branding-settings">
-    <div class="settings-header">
-      <h1>Branding Einstellungen</h1>
-      <p class="text-secondary">Passe das Erscheinungsbild von LogBot an deine Marke an.</p>
+  <div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-800">🎨 Branding Einstellungen</h1>
+      <p class="text-gray-600">Passe das Erscheinungsbild von LogBot an deine Marke an.</p>
     </div>
 
-    <div v-if="brandingStore.loading" class="loading">
+    <!-- Loading -->
+    <div v-if="brandingStore.loading" class="text-center py-12 text-gray-500">
       Lade Einstellungen...
     </div>
 
-    <div v-else class="settings-grid">
+    <!-- Settings Grid -->
+    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
       <!-- Allgemeine Einstellungen -->
-      <section class="settings-section">
-        <h2>Allgemein</h2>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Allgemein</h2>
         
-        <div class="form-group">
-          <label for="company_name">Firmenname</label>
-          <input id="company_name" v-model="brandingStore.config.company_name" type="text" />
-        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Firmenname</label>
+            <input v-model="brandingStore.config.company_name" type="text" 
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          </div>
 
-        <div class="form-group">
-          <label for="tagline">Tagline</label>
-          <input id="tagline" v-model="brandingStore.config.tagline" type="text" />
-        </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tagline</label>
+            <input v-model="brandingStore.config.tagline" type="text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          </div>
 
-        <div class="form-group">
-          <label for="footer_text">Footer Text</label>
-          <input id="footer_text" v-model="brandingStore.config.footer_text" type="text" />
-        </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Footer Text</label>
+            <input v-model="brandingStore.config.footer_text" type="text"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          </div>
 
-        <div class="form-group">
-          <label for="support_email">Support E-Mail</label>
-          <input id="support_email" v-model="brandingStore.config.support_email" type="email" />
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Support E-Mail</label>
+            <input v-model="brandingStore.config.support_email" type="email"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+          </div>
         </div>
-      </section>
+      </div>
 
       <!-- Logo & Favicon -->
-      <section class="settings-section">
-        <h2>Logo & Favicon</h2>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Logo & Favicon</h2>
         
-        <div class="form-group">
-          <label>Logo</label>
-          <div class="upload-area">
-            <div v-if="brandingStore.getLogoUrl()" class="preview">
-              <img :src="brandingStore.getLogoUrl()" alt="Logo" />
+        <div class="space-y-4">
+          <!-- Logo -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+            <div class="flex items-center gap-4">
+              <div class="w-20 h-20 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden">
+                <img v-if="brandingStore.getLogoUrl()" :src="brandingStore.getLogoUrl()" alt="Logo" class="max-w-full max-h-full object-contain" />
+                <span v-else class="text-gray-400 text-xs">Kein Logo</span>
+              </div>
+              <input type="file" accept=".png,.jpg,.jpeg,.svg,.webp" @change="handleLogoUpload" ref="logoInput" class="hidden" />
+              <button @click="$refs.logoInput.click()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                Logo hochladen
+              </button>
             </div>
-            <div v-else class="preview placeholder">Kein Logo</div>
-            <input type="file" accept=".png,.jpg,.jpeg,.svg,.webp" @change="handleLogoUpload" ref="logoInput" />
-            <button class="btn-secondary" @click="$refs.logoInput.click()">Logo hochladen</button>
+          </div>
+
+          <!-- Favicon -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden">
+                <img v-if="brandingStore.getFaviconUrl()" :src="brandingStore.getFaviconUrl()" alt="Favicon" class="max-w-full max-h-full object-contain" />
+                <span v-else class="text-gray-400 text-xs">—</span>
+              </div>
+              <input type="file" accept=".ico,.png,.svg" @change="handleFaviconUpload" ref="faviconInput" class="hidden" />
+              <button @click="$refs.faviconInput.click()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                Favicon hochladen
+              </button>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="form-group">
-          <label>Favicon</label>
-          <div class="upload-area">
-            <div v-if="brandingStore.getFaviconUrl()" class="preview favicon">
-              <img :src="brandingStore.getFaviconUrl()" alt="Favicon" />
-            </div>
-            <div v-else class="preview placeholder favicon">Kein Favicon</div>
-            <input type="file" accept=".ico,.png,.svg" @change="handleFaviconUpload" ref="faviconInput" />
-            <button class="btn-secondary" @click="$refs.faviconInput.click()">Favicon hochladen</button>
+      <!-- Theme Einstellungen -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Theme</h2>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Standard Theme</label>
+            <select v-model="brandingStore.config.default_theme"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="dark">Dark Mode</option>
+              <option value="light">Light Mode</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="allow_toggle" v-model="brandingStore.config.allow_theme_toggle" 
+              class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
+            <label for="allow_toggle" class="text-sm text-gray-700">Theme-Wechsel erlauben</label>
           </div>
         </div>
-      </section>
-
-      <!-- Theme -->
-      <section class="settings-section">
-        <h2>Theme</h2>
-        
-        <div class="form-group">
-          <label for="default_theme">Standard Theme</label>
-          <select id="default_theme" v-model="brandingStore.config.default_theme">
-            <option value="dark">Dark Mode</option>
-            <option value="light">Light Mode</option>
-          </select>
-        </div>
-
-        <div class="form-group checkbox-group">
-          <input id="allow_toggle" type="checkbox" v-model="brandingStore.config.allow_theme_toggle" />
-          <label for="allow_toggle">Theme-Wechsel erlauben</label>
-        </div>
-      </section>
+      </div>
 
       <!-- Markenfarben -->
-      <section class="settings-section">
-        <h2>Markenfarben</h2>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Markenfarben</h2>
         
-        <div class="color-grid">
-          <div class="color-item">
-            <label>Primär</label>
-            <input type="color" v-model="brandingStore.config.primary_color" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.primary_color }}</span>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Primär</label>
+            <input type="color" v-model="brandingStore.config.primary_color" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.primary_color }}</span>
           </div>
-          <div class="color-item">
-            <label>Sekundär</label>
-            <input type="color" v-model="brandingStore.config.secondary_color" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.secondary_color }}</span>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Sekundär</label>
+            <input type="color" v-model="brandingStore.config.secondary_color" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.secondary_color }}</span>
           </div>
-          <div class="color-item">
-            <label>Akzent</label>
-            <input type="color" v-model="brandingStore.config.accent_color" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.accent_color }}</span>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Akzent</label>
+            <input type="color" v-model="brandingStore.config.accent_color" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.accent_color }}</span>
           </div>
-          <div class="color-item">
-            <label>Erfolg</label>
-            <input type="color" v-model="brandingStore.config.success_color" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.success_color }}</span>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Erfolg</label>
+            <input type="color" v-model="brandingStore.config.success_color" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.success_color }}</span>
           </div>
-          <div class="color-item">
-            <label>Warnung</label>
-            <input type="color" v-model="brandingStore.config.warning_color" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.warning_color }}</span>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Warnung</label>
+            <input type="color" v-model="brandingStore.config.warning_color" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.warning_color }}</span>
           </div>
-          <div class="color-item">
-            <label>Fehler</label>
-            <input type="color" v-model="brandingStore.config.danger_color" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.danger_color }}</span>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Fehler</label>
+            <input type="color" v-model="brandingStore.config.danger_color" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.danger_color }}</span>
           </div>
         </div>
-      </section>
+      </div>
 
       <!-- Dark Mode Farben -->
-      <section class="settings-section">
-        <h2>Dark Mode Farben</h2>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Dark Mode Farben</h2>
         
-        <div class="color-grid">
-          <div class="color-item">
-            <label>Hintergrund</label>
-            <input type="color" v-model="brandingStore.config.dark_scheme.background" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.dark_scheme.background }}</span>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Hintergrund</label>
+            <input type="color" v-model="brandingStore.config.dark_scheme.background" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.background }}</span>
           </div>
-          <div class="color-item">
-            <label>Oberfläche</label>
-            <input type="color" v-model="brandingStore.config.dark_scheme.surface" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.dark_scheme.surface }}</span>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Oberfläche</label>
+            <input type="color" v-model="brandingStore.config.dark_scheme.surface" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.surface }}</span>
           </div>
-          <div class="color-item">
-            <label>Rahmen</label>
-            <input type="color" v-model="brandingStore.config.dark_scheme.border" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.dark_scheme.border }}</span>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Rahmen</label>
+            <input type="color" v-model="brandingStore.config.dark_scheme.border" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.border }}</span>
           </div>
-          <div class="color-item">
-            <label>Text Primär</label>
-            <input type="color" v-model="brandingStore.config.dark_scheme.text_primary" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.dark_scheme.text_primary }}</span>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Text Primär</label>
+            <input type="color" v-model="brandingStore.config.dark_scheme.text_primary" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.text_primary }}</span>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Text Sekundär</label>
+            <input type="color" v-model="brandingStore.config.dark_scheme.text_secondary" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.text_secondary }}</span>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Text Muted</label>
+            <input type="color" v-model="brandingStore.config.dark_scheme.text_muted" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.text_muted }}</span>
           </div>
         </div>
-      </section>
+      </div>
 
       <!-- Light Mode Farben -->
-      <section class="settings-section">
-        <h2>Light Mode Farben</h2>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Light Mode Farben</h2>
         
-        <div class="color-grid">
-          <div class="color-item">
-            <label>Hintergrund</label>
-            <input type="color" v-model="brandingStore.config.light_scheme.background" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.light_scheme.background }}</span>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Hintergrund</label>
+            <input type="color" v-model="brandingStore.config.light_scheme.background" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.background }}</span>
           </div>
-          <div class="color-item">
-            <label>Oberfläche</label>
-            <input type="color" v-model="brandingStore.config.light_scheme.surface" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.light_scheme.surface }}</span>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Oberfläche</label>
+            <input type="color" v-model="brandingStore.config.light_scheme.surface" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.surface }}</span>
           </div>
-          <div class="color-item">
-            <label>Rahmen</label>
-            <input type="color" v-model="brandingStore.config.light_scheme.border" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.light_scheme.border }}</span>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Rahmen</label>
+            <input type="color" v-model="brandingStore.config.light_scheme.border" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.border }}</span>
           </div>
-          <div class="color-item">
-            <label>Text Primär</label>
-            <input type="color" v-model="brandingStore.config.light_scheme.text_primary" @input="brandingStore.applyCSS()" />
-            <span class="color-value">{{ brandingStore.config.light_scheme.text_primary }}</span>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Text Primär</label>
+            <input type="color" v-model="brandingStore.config.light_scheme.text_primary" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.text_primary }}</span>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Text Sekundär</label>
+            <input type="color" v-model="brandingStore.config.light_scheme.text_secondary" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.text_secondary }}</span>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-600 mb-1">Text Muted</label>
+            <input type="color" v-model="brandingStore.config.light_scheme.text_muted" @input="brandingStore.applyCSS()"
+              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
+            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.text_muted }}</span>
           </div>
         </div>
-      </section>
+      </div>
 
       <!-- Custom CSS -->
-      <section class="settings-section full-width">
-        <h2>Custom CSS</h2>
-        <div class="form-group">
-          <textarea v-model="brandingStore.config.custom_css" rows="6" placeholder="/* Eigene CSS-Regeln */" @input="brandingStore.applyCSS()"></textarea>
-        </div>
-      </section>
+      <div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Custom CSS</h2>
+        <textarea v-model="brandingStore.config.custom_css" rows="5" @input="brandingStore.applyCSS()"
+          placeholder="/* Eigene CSS-Regeln hier einfügen */"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+      </div>
     </div>
 
-    <!-- Actions -->
-    <div class="settings-actions">
-      <button class="btn-secondary" @click="handleReset" :disabled="saving">Zurücksetzen</button>
-      <button @click="handleSave" :disabled="saving">{{ saving ? 'Speichert...' : 'Speichern' }}</button>
+    <!-- Action Buttons -->
+    <div class="flex justify-end gap-4 mt-6 pt-6 border-t">
+      <button @click="handleReset" :disabled="saving"
+        class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50">
+        Zurücksetzen
+      </button>
+      <button @click="handleSave" :disabled="saving"
+        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+        {{ saving ? 'Speichert...' : 'Speichern' }}
+      </button>
     </div>
 
     <!-- Toast -->
-    <div v-if="toast.show" :class="['toast', toast.type]">{{ toast.message }}</div>
+    <div v-if="toast.show" 
+      :class="['fixed bottom-6 right-6 px-6 py-3 rounded-lg text-white font-medium shadow-lg z-50', toast.type === 'success' ? 'bg-green-500' : 'bg-red-500']">
+      {{ toast.message }}
+    </div>
   </div>
 </template>
 
@@ -219,11 +287,7 @@ const saving = ref(false)
 const logoInput = ref(null)
 const faviconInput = ref(null)
 
-const toast = reactive({
-  show: false,
-  message: '',
-  type: 'success'
-})
+const toast = reactive({ show: false, message: '', type: 'success' })
 
 function showToast(message, type = 'success') {
   toast.message = message
@@ -235,12 +299,12 @@ function showToast(message, type = 'success') {
 async function handleSave() {
   saving.value = true
   const success = await brandingStore.saveConfig()
-  showToast(success ? 'Gespeichert!' : 'Fehler!', success ? 'success' : 'error')
+  showToast(success ? 'Gespeichert!' : 'Fehler beim Speichern!', success ? 'success' : 'error')
   saving.value = false
 }
 
 async function handleReset() {
-  if (!confirm('Wirklich zurücksetzen?')) return
+  if (!confirm('Wirklich alle Einstellungen zurücksetzen?')) return
   saving.value = true
   const success = await brandingStore.resetToDefaults()
   showToast(success ? 'Zurückgesetzt!' : 'Fehler!', success ? 'success' : 'error')
@@ -269,170 +333,3 @@ onMounted(() => {
   }
 })
 </script>
-
-<style scoped>
-.branding-settings {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.settings-header {
-  margin-bottom: 2rem;
-}
-
-.settings-header h1 {
-  margin-bottom: 0.5rem;
-}
-
-.settings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 1.5rem;
-}
-
-.settings-section {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-}
-
-.settings-section.full-width {
-  grid-column: 1 / -1;
-}
-
-.settings-section h2 {
-  font-size: 1.125rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.25rem;
-  font-weight: 500;
-}
-
-.form-group input[type="text"],
-.form-group input[type="email"],
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 0.5rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  color: var(--color-text-primary);
-}
-
-.form-group textarea {
-  font-family: monospace;
-  resize: vertical;
-}
-
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.checkbox-group input { width: auto; }
-.checkbox-group label { margin-bottom: 0; font-weight: normal; }
-
-.upload-area {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.upload-area input[type="file"] { display: none; }
-
-.preview {
-  width: 80px;
-  height: 80px;
-  border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: var(--color-surface-elevated);
-}
-
-.preview.favicon { width: 48px; height: 48px; }
-.preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
-.preview.placeholder { color: var(--color-text-muted); font-size: 0.75rem; text-align: center; }
-
-.color-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 1rem;
-}
-
-.color-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.color-item label {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-}
-
-.color-item input[type="color"] {
-  width: 100%;
-  height: 40px;
-  padding: 2px;
-  border: 1px solid var(--color-border);
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-.color-value {
-  font-family: monospace;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.settings-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--color-border);
-}
-
-.toast {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  padding: 1rem 1.5rem;
-  border-radius: 0.5rem;
-  color: white;
-  font-weight: 500;
-  z-index: 1000;
-}
-
-.toast.success { background: var(--color-success); }
-.toast.error { background: var(--color-danger); }
-
-.loading {
-  text-align: center;
-  padding: 3rem;
-  color: var(--color-text-muted);
-}
-
-.btn-secondary {
-  background: var(--color-surface-elevated);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
-}
-</style>
