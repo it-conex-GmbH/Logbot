@@ -1,8 +1,8 @@
 <!--
 ================================================================================
 Name:           Phil Fischer
-E-Mail:         p.fischer@phytech.de & p.fischer@itconex.de
-Version:        30.01.2026.17.32.18
+E-Mail:         p.fischer@phytech.de
+Version:        30.01.2026.17.42.08
 ================================================================================
 
 LogBot App.vue - Hauptkomponente
@@ -33,8 +33,8 @@ Initialisiert beim Start:
  * Lädt Branding-Config beim Start und initialisiert Theme
  */
 import { ref, onMounted } from 'vue'
-import { useBrandingStore } from '@/stores/brandingStore'
-import { useThemeStore } from '@/stores/themeStore'
+import { useBrandingStore } from './stores/brandingStore'
+import { useThemeStore } from './stores/themeStore'
 
 // ===========================================================================
 // Stores

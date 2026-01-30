@@ -2,7 +2,7 @@
  * ==============================================================================
  * Name:           Phil Fischer
  * E-Mail:         p.fischer@phytech.de
- * Version:        30.01.2026.17.12.33
+ * Version:        30.01.2026.17.43.22
  * ==============================================================================
  * 
  * LogBot Branding Store - Pinia Store für Whitelabel-Konfiguration
@@ -33,43 +33,24 @@ export const useBrandingStore = defineStore('branding', () => {
   // State
   // ===========================================================================
   
-  /**
-   * Ladezustand - true während Config geladen wird
-   */
   const loading = ref(true)
-  
-  /**
-   * Fehlermeldung falls Laden fehlschlägt
-   */
   const error = ref(null)
   
-  /**
-   * Vollständige Branding-Konfiguration vom Backend
-   */
   const config = reactive({
-    // Allgemein
     company_name: 'LogBot',
     tagline: 'Centralized Log Management',
     footer_text: '© 2026 LogBot. All rights reserved.',
     support_email: 'support@example.com',
-    
-    // Assets
     logo_path: null,
     favicon_path: null,
-    
-    // Theme
     default_theme: 'dark',
     allow_theme_toggle: true,
-    
-    // Markenfarben
     primary_color: '#0ea5e9',
     secondary_color: '#6366f1',
     accent_color: '#22c55e',
     success_color: '#10b981',
     warning_color: '#f59e0b',
     danger_color: '#ef4444',
-    
-    // Dark Mode
     dark_scheme: {
       background: '#0a0a0f',
       surface: '#111118',
@@ -79,8 +60,6 @@ export const useBrandingStore = defineStore('branding', () => {
       text_secondary: '#94a3b8',
       text_muted: '#64748b'
     },
-    
-    // Light Mode
     light_scheme: {
       background: '#f8fafc',
       surface: '#ffffff',
@@ -90,8 +69,6 @@ export const useBrandingStore = defineStore('branding', () => {
       text_secondary: '#475569',
       text_muted: '#94a3b8'
     },
-    
-    // Custom CSS
     custom_css: ''
   })
   
@@ -99,10 +76,6 @@ export const useBrandingStore = defineStore('branding', () => {
   // Actions
   // ===========================================================================
   
-  /**
-   * Lädt die Branding-Konfiguration vom Backend
-   * Sollte beim App-Start aufgerufen werden
-   */
   async function loadConfig() {
     loading.value = true
     error.value = null
@@ -115,34 +88,23 @@ export const useBrandingStore = defineStore('branding', () => {
       }
       
       const data = await response.json()
-      
-      // Config-Objekt aktualisieren
       Object.assign(config, data)
       
-      // Theme initialisieren
       const themeStore = useThemeStore()
       themeStore.initTheme(config.default_theme)
       
-      // CSS-Variablen anwenden
       applyCSS()
-      
-      // Favicon und Titel setzen
       updatePageMeta()
       
     } catch (err) {
       console.error('[Branding] Fehler beim Laden:', err)
       error.value = err.message
-      
-      // Trotzdem CSS anwenden mit Default-Werten
       applyCSS()
     } finally {
       loading.value = false
     }
   }
   
-  /**
-   * Speichert die aktuelle Konfiguration im Backend
-   */
   async function saveConfig() {
     try {
       const response = await fetch(`${API_BASE}/config`, {
@@ -155,7 +117,6 @@ export const useBrandingStore = defineStore('branding', () => {
         throw new Error(`HTTP ${response.status}`)
       }
       
-      // CSS neu anwenden
       applyCSS()
       updatePageMeta()
       
@@ -167,9 +128,6 @@ export const useBrandingStore = defineStore('branding', () => {
     }
   }
   
-  /**
-   * Setzt alle Einstellungen auf Standardwerte zurück
-   */
   async function resetToDefaults() {
     try {
       const response = await fetch(`${API_BASE}/reset`, { method: 'POST' })
@@ -192,10 +150,6 @@ export const useBrandingStore = defineStore('branding', () => {
     }
   }
   
-  /**
-   * Lädt ein Logo hoch
-   * @param {File} file - Die Bilddatei
-   */
   async function uploadLogo(file) {
     const formData = new FormData()
     formData.append('file', file)
@@ -221,10 +175,6 @@ export const useBrandingStore = defineStore('branding', () => {
     }
   }
   
-  /**
-   * Lädt ein Favicon hoch
-   * @param {File} file - Die Bilddatei
-   */
   async function uploadFavicon(file) {
     const formData = new FormData()
     formData.append('file', file)
@@ -251,14 +201,8 @@ export const useBrandingStore = defineStore('branding', () => {
     }
   }
   
-  /**
-   * Aktualisiert eine einzelne Farbe
-   * @param {string} key - z.B. 'primary_color' oder 'dark_scheme.background'
-   * @param {string} value - Hex-Farbwert
-   */
   function updateColor(key, value) {
     if (key.includes('.')) {
-      // Nested key wie 'dark_scheme.background'
       const [scheme, prop] = key.split('.')
       if (config[scheme] && prop in config[scheme]) {
         config[scheme][prop] = value
@@ -266,8 +210,6 @@ export const useBrandingStore = defineStore('branding', () => {
     } else if (key in config) {
       config[key] = value
     }
-    
-    // CSS sofort aktualisieren für Live-Preview
     applyCSS()
   }
   
@@ -275,14 +217,9 @@ export const useBrandingStore = defineStore('branding', () => {
   // CSS-Variablen Injection
   // ===========================================================================
   
-  /**
-   * Wendet alle CSS-Variablen auf :root an
-   * Wird bei jedem Config-Update aufgerufen
-   */
   function applyCSS() {
     const root = document.documentElement
     
-    // Markenfarben (theme-unabhängig)
     root.style.setProperty('--color-primary', config.primary_color)
     root.style.setProperty('--color-secondary', config.secondary_color)
     root.style.setProperty('--color-accent', config.accent_color)
@@ -290,7 +227,6 @@ export const useBrandingStore = defineStore('branding', () => {
     root.style.setProperty('--color-warning', config.warning_color)
     root.style.setProperty('--color-danger', config.danger_color)
     
-    // Dark Mode Farben
     root.style.setProperty('--dark-bg', config.dark_scheme.background)
     root.style.setProperty('--dark-surface', config.dark_scheme.surface)
     root.style.setProperty('--dark-surface-elevated', config.dark_scheme.surface_elevated)
@@ -299,7 +235,6 @@ export const useBrandingStore = defineStore('branding', () => {
     root.style.setProperty('--dark-text-secondary', config.dark_scheme.text_secondary)
     root.style.setProperty('--dark-text-muted', config.dark_scheme.text_muted)
     
-    // Light Mode Farben
     root.style.setProperty('--light-bg', config.light_scheme.background)
     root.style.setProperty('--light-surface', config.light_scheme.surface)
     root.style.setProperty('--light-surface-elevated', config.light_scheme.surface_elevated)
@@ -308,13 +243,9 @@ export const useBrandingStore = defineStore('branding', () => {
     root.style.setProperty('--light-text-secondary', config.light_scheme.text_secondary)
     root.style.setProperty('--light-text-muted', config.light_scheme.text_muted)
     
-    // Custom CSS injizieren
     injectCustomCSS()
   }
   
-  /**
-   * Injiziert Custom CSS in ein <style> Element
-   */
   function injectCustomCSS() {
     const styleId = 'logbot-custom-css'
     let styleElement = document.getElementById(styleId)
@@ -328,14 +259,9 @@ export const useBrandingStore = defineStore('branding', () => {
     styleElement.textContent = config.custom_css
   }
   
-  /**
-   * Aktualisiert Seitentitel und Favicon
-   */
   function updatePageMeta() {
-    // Seitentitel
     document.title = config.company_name
     
-    // Favicon
     if (config.favicon_path) {
       let link = document.querySelector("link[rel~='icon']")
       if (!link) {
@@ -351,16 +277,10 @@ export const useBrandingStore = defineStore('branding', () => {
   // Getters
   // ===========================================================================
   
-  /**
-   * Gibt die Logo-URL zurück
-   */
   function getLogoUrl() {
     return config.logo_path ? `${API_BASE}/assets/${config.logo_path}` : null
   }
   
-  /**
-   * Gibt die Favicon-URL zurück
-   */
   function getFaviconUrl() {
     return config.favicon_path ? `${API_BASE}/assets/${config.favicon_path}` : null
   }
@@ -369,12 +289,9 @@ export const useBrandingStore = defineStore('branding', () => {
   // Public API
   // ===========================================================================
   return {
-    // State
     loading,
     error,
     config,
-    
-    // Actions
     loadConfig,
     saveConfig,
     resetToDefaults,
@@ -382,8 +299,6 @@ export const useBrandingStore = defineStore('branding', () => {
     uploadFavicon,
     updateColor,
     applyCSS,
-    
-    // Getters
     getLogoUrl,
     getFaviconUrl
   }
