@@ -57,12 +57,18 @@ check_requirements() {
         exit 1
     fi
     
+    # curl installieren wenn nicht vorhanden
+    if ! command -v curl &> /dev/null; then
+        log_warn "curl nicht gefunden - installiere..."
+        sudo apt-get update && sudo apt-get install -y curl
+    fi
+    
     # Docker - automatisch installieren wenn nicht vorhanden
     if ! command -v docker &> /dev/null; then
         log_warn "Docker nicht gefunden - installiere automatisch..."
-        curl -fsSL https://get.docker.com | sh
-        systemctl enable docker
-        systemctl start docker
+        curl -fsSL https://get.docker.com | sudo sh
+        sudo systemctl enable docker
+        sudo systemctl start docker
         log_success "Docker installiert"
     fi
     
