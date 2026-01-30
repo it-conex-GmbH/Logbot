@@ -85,7 +85,7 @@ class SyslogParser:
             'source': 'unknown',
             'message': raw,
             'raw_message': raw,
-            'metadata': {}
+            'extra_data': {}
         }
         
         # Pattern 1: UniFi Netconsole - {hex} ist KEINE Device-ID!
@@ -100,7 +100,7 @@ class SyslogParser:
                 'source': source,
                 'message': msg,
                 'device_type': 'unifi_ap',
-                'metadata': {'format': 'netconsole', 'sequence': hex_seq}
+                'extra_data': {'format': 'netconsole', 'sequence': hex_seq}
             })
             return result
         
@@ -118,7 +118,7 @@ class SyslogParser:
                 'source': source,
                 'message': msg,
                 'device_type': 'unifi_ap',
-                'metadata': {'format': 'mac_model', 'model': model}
+                'extra_data': {'format': 'mac_model', 'model': model}
             })
             return result
         
@@ -133,7 +133,7 @@ class SyslogParser:
                 'level': lvl,
                 'source': source,
                 'message': msg,
-                'metadata': {'format': 'bsd'}
+                'extra_data': {'format': 'bsd'}
             })
             return result
         
@@ -174,7 +174,7 @@ class DatabaseManager:
             await self.pool.close()
     
     async def get_or_create_agent(self, hostname: str, ip: str, mac: str, 
-                                   device_type: str, metadata: dict) -> int:
+                                   device_type: str, extra_data: dict) -> int:
         """Agent finden oder erstellen."""
         async with self.pool.acquire() as conn:
             # Nach MAC suchen wenn vorhanden
@@ -198,24 +198,24 @@ class DatabaseManager:
             
             # Neu erstellen
             return await conn.fetchval(
-                """INSERT INTO agents (hostname, ip_address, mac_address, device_type, metadata)
+                """INSERT INTO agents (hostname, ip_address, mac_address, device_type, extra_data)
                    VALUES ($1, $2, $3, $4, $5::jsonb) RETURNING id""",
-                hostname, ip, mac, device_type, json.dumps(metadata))
+                hostname, ip, mac, device_type, json.dumps(extra_data))
     
     async def insert_log(self, data: Dict[str, Any]) -> int:
         """Log einfügen."""
         agent_id = await self.get_or_create_agent(
             data['hostname'], data['ip_address'], data.get('mac_address'),
-            data['device_type'], data.get('metadata', {}))
+            data['device_type'], data.get('extra_data', {}))
         
         async with self.pool.acquire() as conn:
             return await conn.fetchval(
                 """INSERT INTO logs (agent_id, hostname, ip_address, facility, level, 
-                   source, message, raw_message, metadata)
+                   source, message, raw_message, extra_data)
                    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb) RETURNING id""",
                 agent_id, data['hostname'], data['ip_address'], data['facility'],
                 data['level'], data['source'], data['message'], data['raw_message'],
-                json.dumps(data.get('metadata', {})))
+                json.dumps(data.get('extra_data', {})))
 
 
 class SyslogUDPProtocol(asyncio.DatagramProtocol):
