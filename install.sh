@@ -57,16 +57,19 @@ check_requirements() {
         exit 1
     fi
     
-    # Docker
+    # Docker - automatisch installieren wenn nicht vorhanden
     if ! command -v docker &> /dev/null; then
-        log_error "Docker ist nicht installiert!"
-        log_info "Installation: curl -fsSL https://get.docker.com | sh"
-        exit 1
+        log_warn "Docker nicht gefunden - installiere automatisch..."
+        curl -fsSL https://get.docker.com | sh
+        systemctl enable docker
+        systemctl start docker
+        log_success "Docker installiert"
     fi
     
-    # Docker Compose
+    # Docker Compose prüfen (ist bei neuen Docker-Versionen dabei)
     if ! docker compose version &> /dev/null; then
-        log_error "Docker Compose ist nicht installiert!"
+        log_error "Docker Compose nicht verfügbar!"
+        log_info "Bitte Docker neu installieren oder manuell Docker Compose installieren"
         exit 1
     fi
     
