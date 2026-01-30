@@ -1,3 +1,95 @@
+/**
+ * ==============================================================================
+ * Name:           Phil Fischer
+ * E-Mail:         p.fischer@phytech.de & p.fischer@itconex.de
+ * Version:        30.01.2026.18.32.15
+ * ==============================================================================
+ * 
+ * LogBot CSS - Tailwind + Branding CSS-Variablen
+ * ===============================================
+ * Kombiniert Tailwind CSS mit benutzerdefinierten CSS-Variablen
+ * für das Whitelabel-System. Die Variablen werden vom brandingStore
+ * dynamisch überschrieben.
+ * 
+ * ==============================================================================
+ */
+
+/* Tailwind Directives - NICHT ENTFERNEN */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* =============================================================================
+   CSS-Variablen für Branding (werden vom brandingStore überschrieben)
+   ============================================================================= */
+
+:root {
+  /* Markenfarben */
+  --color-primary: #0ea5e9;
+  --color-secondary: #6366f1;
+  --color-accent: #22c55e;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  
+  /* Dark Mode Farben (Default) */
+  --dark-bg: #0a0a0f;
+  --dark-surface: #111118;
+  --dark-surface-elevated: #1a1a24;
+  --dark-border: #2a2a3a;
+  --dark-text-primary: #f8fafc;
+  --dark-text-secondary: #94a3b8;
+  --dark-text-muted: #64748b;
+  
+  /* Light Mode Farben */
+  --light-bg: #f8fafc;
+  --light-surface: #ffffff;
+  --light-surface-elevated: #f1f5f9;
+  --light-border: #e2e8f0;
+  --light-text-primary: #0f172a;
+  --light-text-secondary: #475569;
+  --light-text-muted: #94a3b8;
+}
+
+/* =============================================================================
+   Dark Mode Theme (data-theme="dark" auf <html>)
+   ============================================================================= */
+
+[data-theme="dark"] {
+  --color-bg: var(--dark-bg);
+  --color-surface: var(--dark-surface);
+  --color-surface-elevated: var(--dark-surface-elevated);
+  --color-border: var(--dark-border);
+  --color-text-primary: var(--dark-text-primary);
+  --color-text-secondary: var(--dark-text-secondary);
+  --color-text-muted: var(--dark-text-muted);
+}
+
+/* =============================================================================
+   Light Mode Theme (data-theme="light" auf <html>)
+   ============================================================================= */
+
+[data-theme="light"] {
+  --color-bg: var(--light-bg);
+  --color-surface: var(--light-surface);
+  --color-surface-elevated: var(--light-surface-elevated);
+  --color-border: var(--light-border);
+  --color-text-primary: var(--light-text-primary);
+  --color-text-secondary: var(--light-text-secondary);
+  --color-text-muted: var(--light-text-muted);
+}
+
+/* =============================================================================
+   Utility-Klassen für Branding-Farben (optional nutzbar)
+   ============================================================================= */
+
+.bg-brand-primary { background-color: var(--color-primary); }
+.bg-brand-surface { background-color: var(--color-surface); }
+.bg-brand-elevated { background-color: var(--color-surface-elevated); }
+
+.text-brand-primary { color: var(--color-primary); }
+.text-brand { color: var(--color-text-primary); }
+.text-brand-secondary { color: var(--color-text-secondary); }
+.text-brand-muted { color: var(--color-text-muted); }
+
+.border-brand { border-color: var(--color-border); }
