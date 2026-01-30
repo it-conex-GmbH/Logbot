@@ -48,7 +48,7 @@ class AgentResponse(BaseModel):
     device_type: str
     last_seen: datetime
     first_seen: datetime
-    metadata: Dict[str, Any] = {}
+    extra_data: Dict[str, Any] = {}
     log_count: Optional[int] = None
     class Config:
         from_attributes = True
@@ -75,7 +75,7 @@ class LogDetailResponse(LogResponse):
     agent_id: Optional[int]
     facility: Optional[int]
     raw_message: Optional[str]
-    metadata: Dict[str, Any] = {}
+    extra_data: Dict[str, Any] = {}
 
 class LogListResponse(BaseModel):
     items: List[LogResponse]
