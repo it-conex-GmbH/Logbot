@@ -1,5 +1,4 @@
 # LogBot v2026.01.30.13.30.00
-
 **Zentraler Log-Server für Linux/Windows Systeme und Netzwerkgeräte**
 
 Entwickelt von Philipp Fischer  
@@ -14,6 +13,7 @@ Kontakt: p.fischer@itconex.de
 - 📊 **Dashboard** mit Statistiken
 - 👥 **Benutzerverwaltung** mit Rollen
 - 💚 **Health Monitoring** für System-Ressourcen
+- 🎨 **Whitelabel-System** mit Dark/Light Mode
 - 🐳 **Docker-basiert** für einfache Installation
 
 ## Voraussetzungen
@@ -34,6 +34,7 @@ sudo bash install.sh
 ```
 
 **Oder manuell:**
+
 ```bash
 tar -xzf logbot-v2026.01.30.13.30.00.tar.gz
 cd logbot-v2026.01.30.13.30.00
@@ -46,6 +47,7 @@ Nach der Installation:
 
 - **Web-Interface:** http://SERVER-IP
 - **API Docs:** http://SERVER-IP/api/docs
+- **Branding:** http://SERVER-IP/settings/branding
 - **Login:** admin / admin (bitte ändern!)
 
 ## Syslog-Quellen konfigurieren
@@ -70,9 +72,78 @@ GET /api/webhook/{id}/call?token={token}
 ```
 
 Ideal für n8n-Workflows:
+
 1. LogBot → Webhooks → Neuer Webhook
 2. Filter konfigurieren (Hostname, Level, etc.)
 3. URL in n8n HTTP Request Node einfügen
+
+## Whitelabel / Branding
+
+LogBot bietet ein vollständiges Whitelabel-System zur Anpassung an deine Marke.
+
+### Features
+
+- 🌓 **Dark/Light Mode** mit Toggle-Button
+- 🎨 **Farbschema** vollständig anpassbar
+- 🏢 **Firmenname & Logo** austauschbar
+- 🖼️ **Favicon** anpassbar
+- 📝 **Custom CSS** für erweiterte Anpassungen
+
+### Konfiguration
+
+1. Navigiere zu **Settings → Branding** (`/settings/branding`)
+2. Passe Farben, Logo und Texte an
+3. Klicke auf **Speichern**
+
+### Einstellungen
+
+| Einstellung | Beschreibung |
+|-------------|--------------|
+| Firmenname | Wird im Header und Seitentitel angezeigt |
+| Tagline | Slogan unter dem Firmennamen |
+| Logo | PNG, JPG, SVG oder WebP (empfohlen: 200x50px) |
+| Favicon | ICO, PNG oder SVG (empfohlen: 32x32px) |
+| Primärfarbe | Buttons, Links, Akzente |
+| Dark/Light Mode | Standard-Theme und Toggle-Erlaubnis |
+| Custom CSS | Eigene CSS-Regeln für erweiterte Anpassungen |
+
+### Theme-Toggle einbauen
+
+Der Theme-Toggle kann überall eingebaut werden:
+
+```vue
+<template>
+  <ThemeToggle />
+  <!-- oder mit Label: -->
+  <ThemeToggle :showLabel="true" />
+</template>
+
+<script setup>
+import ThemeToggle from '@/components/ThemeToggle.vue'
+</script>
+```
+
+### API-Endpunkte
+
+| Methode | Endpoint | Beschreibung |
+|---------|----------|--------------|
+| GET | `/api/branding/config` | Aktuelle Konfiguration laden |
+| PUT | `/api/branding/config` | Konfiguration speichern |
+| POST | `/api/branding/upload/logo` | Logo hochladen |
+| POST | `/api/branding/upload/favicon` | Favicon hochladen |
+| POST | `/api/branding/reset` | Auf Standardwerte zurücksetzen |
+
+### Standard-Farben (itconex.de inspiriert)
+
+**Dark Mode:**
+- Hintergrund: `#0a0a0f`
+- Oberfläche: `#111118`
+- Primär: `#0ea5e9`
+
+**Light Mode:**
+- Hintergrund: `#f8fafc`
+- Oberfläche: `#ffffff`
+- Primär: `#0ea5e9`
 
 ## Verzeichnisstruktur
 
@@ -81,7 +152,17 @@ Ideal für n8n-Workflows:
 ├── docker-compose.yml
 ├── .env                 # Zugangsdaten (geheim!)
 ├── backend/             # FastAPI Backend
+│   └── app/
+│       └── branding.py  # Branding API
 ├── frontend/            # Vue.js Frontend
+│   └── src/
+│       ├── stores/
+│       │   ├── themeStore.js
+│       │   └── brandingStore.js
+│       ├── components/
+│       │   └── ThemeToggle.vue
+│       └── views/
+│           └── BrandingSettings.vue
 ├── syslog/              # Syslog Server
 ├── caddy/               # Reverse Proxy
 └── db/                  # Datenbank-Schema
@@ -123,6 +204,13 @@ docker compose exec -T postgres psql -U logbot logbot < backup.sql
 ```
 
 ## Changelog
+
+### v2026.01.30.17.30.00 (2026-01-30)
+- **NEU:** Whitelabel-System mit Dark/Light Mode
+- **NEU:** Branding-Einstellungen im Web-Interface
+- **NEU:** Logo und Favicon Upload
+- **NEU:** Custom CSS Support
+- **NEU:** Theme-Toggle Komponente
 
 ### v2026.01.30.13.30.00 (2026-01-30)
 - UniFi Netconsole Parsing Fix (Hex-ID != Hostname)
