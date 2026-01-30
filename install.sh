@@ -57,6 +57,12 @@ check_requirements() {
         exit 1
     fi
     
+    # git installieren wenn nicht vorhanden
+    if ! command -v git &> /dev/null; then
+        log_warn "git nicht gefunden - installiere..."
+        sudo apt-get update && sudo apt-get install -y git
+    fi
+    
     # curl installieren wenn nicht vorhanden
     if ! command -v curl &> /dev/null; then
         log_warn "curl nicht gefunden - installiere..."
@@ -72,10 +78,9 @@ check_requirements() {
         log_success "Docker installiert"
     fi
     
-    # Docker Compose prüfen (ist bei neuen Docker-Versionen dabei)
+    # Docker Compose prüfen
     if ! docker compose version &> /dev/null; then
         log_error "Docker Compose nicht verfügbar!"
-        log_info "Bitte Docker neu installieren oder manuell Docker Compose installieren"
         exit 1
     fi
     
