@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS agents (
     device_type VARCHAR(50) DEFAULT 'unknown',
     last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    metadata JSONB DEFAULT '{}',
+    extra_data JSONB DEFAULT '{}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS logs (
     source VARCHAR(100),
     message TEXT,
     raw_message TEXT,
-    metadata JSONB DEFAULT '{}',
+    extra_data JSONB DEFAULT '{}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
