@@ -1,65 +1,69 @@
 <!-- ==============================================================================
      Name:        Philipp Fischer
      Kontakt:     p.fischer@itconex.de
-     Version:     2026.01.30.13.30.00
-     Beschreibung: LogBot v2026.01.30.13.30.00 - Einstellungen und Log-Retention
+     Version:     2026.01.30.19.15.33
+     Beschreibung: LogBot - Einstellungen mit Theme-Support
      ============================================================================== -->
 
 <template>
   <div class="p-6">
-    <h1 class="text-2xl font-bold mb-6">Einstellungen</h1>
+    <h1 class="text-2xl font-bold mb-6" :style="{ color: 'var(--color-text-primary)' }">Einstellungen</h1>
     
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Allgemeine Einstellungen -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold mb-4">Allgemeine Einstellungen</h2>
+      <div class="rounded-lg shadow p-6" :style="cardStyle">
+        <h2 class="text-lg font-semibold mb-4" :style="{ color: 'var(--color-text-primary)' }">Allgemeine Einstellungen</h2>
         
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Anwendungsname</label>
+            <label class="block text-sm font-medium mb-1" :style="{ color: 'var(--color-text-secondary)' }">Anwendungsname</label>
             <input
               v-model="settings.app_name"
               type="text"
-              class="w-full border rounded px-3 py-2"
+              class="w-full rounded px-3 py-2"
+              :style="inputStyle"
             >
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Zeitzone</label>
+            <label class="block text-sm font-medium mb-1" :style="{ color: 'var(--color-text-secondary)' }">Zeitzone</label>
             <input
               v-model="settings.timezone"
               type="text"
-              class="w-full border rounded px-3 py-2"
+              class="w-full rounded px-3 py-2"
+              :style="inputStyle"
               placeholder="Europe/Berlin"
             >
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Agent Offline Timeout (Sekunden)</label>
+            <label class="block text-sm font-medium mb-1" :style="{ color: 'var(--color-text-secondary)' }">Agent Offline Timeout (Sekunden)</label>
             <input
               v-model.number="settings.agent_offline_timeout"
               type="number"
               min="60"
-              class="w-full border rounded px-3 py-2"
+              class="w-full rounded px-3 py-2"
+              :style="inputStyle"
             >
-            <p class="text-gray-500 text-xs mt-1">Nach dieser Zeit ohne Logs gilt ein Agent als offline</p>
+            <p class="text-xs mt-1" :style="{ color: 'var(--color-text-muted)' }">Nach dieser Zeit ohne Logs gilt ein Agent als offline</p>
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Max. Logs pro API-Anfrage</label>
+            <label class="block text-sm font-medium mb-1" :style="{ color: 'var(--color-text-secondary)' }">Max. Logs pro API-Anfrage</label>
             <input
               v-model.number="settings.max_logs_per_request"
               type="number"
               min="100"
               max="10000"
-              class="w-full border rounded px-3 py-2"
+              class="w-full rounded px-3 py-2"
+              :style="inputStyle"
             >
           </div>
           
           <div class="flex items-center justify-between">
             <div>
-              <label class="block text-sm font-medium text-gray-700">Auto-Discovery</label>
-              <p class="text-gray-500 text-xs">Neue Agents automatisch erstellen</p>
+              <label class="block text-sm font-medium" :style="{ color: 'var(--color-text-secondary)' }">Auto-Discovery</label>
+              <p class="text-xs" :style="{ color: 'var(--color-text-muted)' }">Neue Agents automatisch erstellen</p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
               <input
@@ -67,52 +71,55 @@
                 v-model="settings.enable_auto_discovery"
                 class="sr-only peer"
               >
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div class="w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all" :style="{ backgroundColor: settings.enable_auto_discovery ? 'var(--color-primary)' : 'var(--color-surface-elevated)' }"></div>
             </label>
           </div>
           
           <button
             @click="saveAllSettings"
             :disabled="saving"
-            class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded disabled:opacity-50 mt-4"
+            class="w-full text-white py-2 rounded disabled:opacity-50 mt-4 hover:opacity-90"
+            :style="{ backgroundColor: 'var(--color-primary)' }"
           >
             {{ saving ? 'Speichere...' : '💾 Einstellungen speichern' }}
           </button>
           
-          <p v-if="saveMessage" :class="saveError ? 'text-red-500' : 'text-green-500'" class="text-sm text-center">
+          <p v-if="saveMessage" :class="saveError ? '' : ''" class="text-sm text-center" :style="{ color: saveError ? 'var(--color-danger)' : 'var(--color-success)' }">
             {{ saveMessage }}
           </p>
         </div>
       </div>
       
       <!-- Log Retention -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold mb-4">Log Retention</h2>
+      <div class="rounded-lg shadow p-6" :style="cardStyle">
+        <h2 class="text-lg font-semibold mb-4" :style="{ color: 'var(--color-text-primary)' }">Log Retention</h2>
         
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Aufbewahrung (Tage)</label>
+            <label class="block text-sm font-medium mb-1" :style="{ color: 'var(--color-text-secondary)' }">Aufbewahrung (Tage)</label>
             <input
               v-model.number="retentionDays"
               type="number"
               min="1"
-              class="w-full border rounded px-3 py-2"
+              class="w-full rounded px-3 py-2"
+              :style="inputStyle"
             >
-            <p class="text-gray-500 text-xs mt-1">Logs älter als diese Anzahl Tage werden bei Cleanup gelöscht</p>
+            <p class="text-xs mt-1" :style="{ color: 'var(--color-text-muted)' }">Logs älter als diese Anzahl Tage werden bei Cleanup gelöscht</p>
           </div>
           
           <button
             @click="previewRetention"
-            class="w-full bg-gray-100 hover:bg-gray-200 py-2 rounded"
+            class="w-full py-2 rounded hover:opacity-80"
+            :style="buttonSecondaryStyle"
           >
             Vorschau anzeigen
           </button>
           
-          <div v-if="retentionPreview" class="bg-yellow-50 border border-yellow-200 rounded p-4">
-            <p class="font-medium text-yellow-800">
+          <div v-if="retentionPreview" class="rounded p-4" :style="warningBoxStyle">
+            <p class="font-medium" :style="{ color: 'var(--color-warning)' }">
               {{ retentionPreview.logs_to_delete.toLocaleString() }} Logs würden gelöscht
             </p>
-            <p v-if="retentionPreview.oldest_log_date" class="text-yellow-700 text-sm mt-1">
+            <p v-if="retentionPreview.oldest_log_date" class="text-sm mt-1" :style="{ color: 'var(--color-text-secondary)' }">
               Ältester Log: {{ formatDate(retentionPreview.oldest_log_date) }}
             </p>
           </div>
@@ -120,53 +127,58 @@
           <button
             @click="executeRetention"
             :disabled="!retentionPreview || retentionPreview.logs_to_delete === 0"
-            class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded disabled:opacity-50"
+            class="w-full text-white py-2 rounded disabled:opacity-50 hover:opacity-90"
+            :style="{ backgroundColor: 'var(--color-danger)' }"
           >
             Alte Logs löschen
           </button>
         </div>
         
-        <div class="mt-6 pt-6 border-t">
-          <h3 class="font-medium text-red-600 mb-4">Gefahrenzone</h3>
+        <div class="mt-6 pt-6 border-t" :style="{ borderColor: 'var(--color-border)' }">
+          <h3 class="font-medium mb-4" :style="{ color: 'var(--color-danger)' }">Gefahrenzone</h3>
           <button
             @click="deleteAllLogs"
-            class="w-full bg-red-100 hover:bg-red-200 text-red-700 py-2 rounded"
+            class="w-full py-2 rounded hover:opacity-80"
+            :style="dangerButtonStyle"
           >
             ⚠️ ALLE Logs löschen
           </button>
-          <p class="text-red-500 text-xs mt-2">Diese Aktion kann nicht rückgängig gemacht werden!</p>
+          <p class="text-xs mt-2" :style="{ color: 'var(--color-danger)' }">Diese Aktion kann nicht rückgängig gemacht werden!</p>
         </div>
       </div>
     </div>
     
     <!-- Passwort ändern -->
-    <div class="bg-white rounded-lg shadow p-6 mt-6">
-      <h2 class="text-lg font-semibold mb-4">Passwort ändern</h2>
+    <div class="rounded-lg shadow p-6 mt-6" :style="cardStyle">
+      <h2 class="text-lg font-semibold mb-4" :style="{ color: 'var(--color-text-primary)' }">Passwort ändern</h2>
       
       <form @submit.prevent="changePassword" class="max-w-md space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Neues Passwort</label>
+          <label class="block text-sm font-medium mb-1" :style="{ color: 'var(--color-text-secondary)' }">Neues Passwort</label>
           <input
             v-model="newPassword"
             type="password"
             required
             minlength="6"
-            class="w-full border rounded px-3 py-2"
+            class="w-full rounded px-3 py-2"
+            :style="inputStyle"
           >
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Passwort bestätigen</label>
+          <label class="block text-sm font-medium mb-1" :style="{ color: 'var(--color-text-secondary)' }">Passwort bestätigen</label>
           <input
             v-model="confirmPassword"
             type="password"
             required
             minlength="6"
-            class="w-full border rounded px-3 py-2"
+            class="w-full rounded px-3 py-2"
+            :style="inputStyle"
           >
         </div>
         <button
           type="submit"
-          class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          class="text-white px-4 py-2 rounded hover:opacity-90"
+          :style="{ backgroundColor: 'var(--color-primary)' }"
         >
           Passwort ändern
         </button>
@@ -176,7 +188,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
@@ -196,6 +208,36 @@ const confirmPassword = ref('')
 const saving = ref(false)
 const saveMessage = ref('')
 const saveError = ref(false)
+
+// Computed Styles
+const cardStyle = computed(() => ({
+  backgroundColor: 'var(--color-surface)',
+  borderColor: 'var(--color-border)'
+}))
+
+const inputStyle = computed(() => ({
+  backgroundColor: 'var(--color-surface-elevated)',
+  borderColor: 'var(--color-border)',
+  color: 'var(--color-text-primary)',
+  border: '1px solid var(--color-border)'
+}))
+
+const buttonSecondaryStyle = computed(() => ({
+  backgroundColor: 'var(--color-surface-elevated)',
+  color: 'var(--color-text-primary)',
+  border: '1px solid var(--color-border)'
+}))
+
+const warningBoxStyle = computed(() => ({
+  backgroundColor: 'var(--color-surface-elevated)',
+  border: '1px solid var(--color-warning)'
+}))
+
+const dangerButtonStyle = computed(() => ({
+  backgroundColor: 'var(--color-surface-elevated)',
+  color: 'var(--color-danger)',
+  border: '1px solid var(--color-danger)'
+}))
 
 onMounted(async () => {
   try {

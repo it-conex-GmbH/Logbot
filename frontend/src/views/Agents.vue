@@ -1,25 +1,26 @@
 <!-- ==============================================================================
      Name:        Philipp Fischer
      Kontakt:     p.fischer@itconex.de
-     Version:     2026.01.30.13.30.00
-     Beschreibung: LogBot v2026.01.30.13.30.00 - Agents/Geräte Übersicht
+     Version:     2026.01.30.19.05.33
+     Beschreibung: LogBot - Agents/Geräte Übersicht mit Theme-Support
      ============================================================================== -->
 
 <template>
   <div class="p-6">
-    <h1 class="text-2xl font-bold mb-6">Agents / Geräte</h1>
+    <h1 class="text-2xl font-bold mb-6" :style="{ color: 'var(--color-text-primary)' }">Agents / Geräte</h1>
     
     <!-- Suche -->
-    <div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="rounded-lg shadow p-4 mb-6" :style="cardStyle">
       <div class="flex gap-4">
         <input
           v-model="search"
           type="text"
           placeholder="Suche nach Hostname, IP oder MAC..."
-          class="flex-1 border rounded px-3 py-2"
+          class="flex-1 rounded px-3 py-2"
+          :style="inputStyle"
           @keyup.enter="loadAgents"
         >
-        <select v-model="deviceType" class="border rounded px-3 py-2">
+        <select v-model="deviceType" class="rounded px-3 py-2" :style="inputStyle">
           <option value="">Alle Typen</option>
           <option value="unifi_ap">UniFi AP</option>
           <option value="linux">Linux</option>
@@ -28,7 +29,8 @@
         </select>
         <button
           @click="loadAgents"
-          class="bg-blue-500 text-white rounded px-4 py-2 hover:bg-blue-600"
+          class="text-white rounded px-4 py-2 hover:opacity-90"
+          :style="{ backgroundColor: 'var(--color-primary)' }"
         >
           Suchen
         </button>
@@ -40,16 +42,17 @@
       <div 
         v-for="agent in agents"
         :key="agent.id"
-        class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+        class="rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
+        :style="cardStyle"
       >
         <div class="flex justify-between items-start mb-4">
           <div>
-            <h3 class="font-semibold text-lg">{{ agent.hostname }}</h3>
-            <p class="text-gray-500 text-sm">{{ agent.ip_address }}</p>
+            <h3 class="font-semibold text-lg" :style="{ color: 'var(--color-text-primary)' }">{{ agent.hostname }}</h3>
+            <p class="text-sm" :style="{ color: 'var(--color-text-muted)' }">{{ agent.ip_address }}</p>
           </div>
           <span 
             class="px-2 py-1 text-xs rounded-full"
-            :class="isOnline(agent.last_seen) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'"
+            :class="isOnline(agent.last_seen) ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'"
           >
             {{ isOnline(agent.last_seen) ? 'Online' : 'Offline' }}
           </span>
@@ -57,45 +60,47 @@
         
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
-            <span class="text-gray-500">Typ:</span>
-            <span>{{ agent.device_type }}</span>
+            <span :style="{ color: 'var(--color-text-muted)' }">Typ:</span>
+            <span :style="{ color: 'var(--color-text-primary)' }">{{ agent.device_type }}</span>
           </div>
           <div v-if="agent.mac_address" class="flex justify-between">
-            <span class="text-gray-500">MAC:</span>
-            <span class="font-mono">{{ agent.mac_address }}</span>
+            <span :style="{ color: 'var(--color-text-muted)' }">MAC:</span>
+            <span class="font-mono" :style="{ color: 'var(--color-text-primary)' }">{{ agent.mac_address }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Zuletzt gesehen:</span>
-            <span>{{ formatTime(agent.last_seen) }}</span>
+            <span :style="{ color: 'var(--color-text-muted)' }">Zuletzt gesehen:</span>
+            <span :style="{ color: 'var(--color-text-primary)' }">{{ formatTime(agent.last_seen) }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Erstmals gesehen:</span>
-            <span>{{ formatTime(agent.first_seen) }}</span>
+            <span :style="{ color: 'var(--color-text-muted)' }">Erstmals gesehen:</span>
+            <span :style="{ color: 'var(--color-text-primary)' }">{{ formatTime(agent.first_seen) }}</span>
           </div>
         </div>
         
         <!-- Metadata wenn vorhanden -->
-        <div v-if="agent.metadata && Object.keys(agent.metadata).length" class="mt-4 pt-4 border-t">
-          <p class="text-gray-500 text-xs mb-2">Metadata:</p>
+        <div v-if="agent.metadata && Object.keys(agent.metadata).length" class="mt-4 pt-4 border-t" :style="{ borderColor: 'var(--color-border)' }">
+          <p class="text-xs mb-2" :style="{ color: 'var(--color-text-muted)' }">Metadata:</p>
           <div class="text-xs space-y-1">
             <div v-for="(value, key) in agent.metadata" :key="key" class="flex justify-between">
-              <span class="text-gray-500">{{ key }}:</span>
-              <span>{{ value }}</span>
+              <span :style="{ color: 'var(--color-text-muted)' }">{{ key }}:</span>
+              <span :style="{ color: 'var(--color-text-primary)' }">{{ value }}</span>
             </div>
           </div>
         </div>
         
         <!-- Actions -->
-        <div class="mt-4 pt-4 border-t flex justify-between">
+        <div class="mt-4 pt-4 border-t flex justify-between" :style="{ borderColor: 'var(--color-border)' }">
           <router-link 
             :to="`/logs?hostname=${agent.hostname}`"
-            class="text-blue-500 hover:underline text-sm"
+            class="hover:underline text-sm"
+            :style="{ color: 'var(--color-primary)' }"
           >
             Logs anzeigen →
           </router-link>
           <button
             @click="deleteAgent(agent)"
-            class="text-red-500 hover:text-red-700 text-sm"
+            class="text-sm hover:opacity-70"
+            :style="{ color: 'var(--color-danger)' }"
           >
             Löschen
           </button>
@@ -104,9 +109,9 @@
     </div>
     
     <!-- Leer-Zustand -->
-    <div v-if="!loading && !agents.length" class="bg-white rounded-lg shadow p-12 text-center">
-      <p class="text-gray-500">Keine Agents gefunden</p>
-      <p class="text-gray-400 text-sm mt-2">Agents werden automatisch erstellt wenn Logs empfangen werden</p>
+    <div v-if="!loading && !agents.length" class="rounded-lg shadow p-12 text-center" :style="cardStyle">
+      <p :style="{ color: 'var(--color-text-muted)' }">Keine Agents gefunden</p>
+      <p class="text-sm mt-2" :style="{ color: 'var(--color-text-muted)' }">Agents werden automatisch erstellt wenn Logs empfangen werden</p>
     </div>
     
     <!-- Pagination -->
@@ -114,15 +119,17 @@
       <button
         @click="page--; loadAgents()"
         :disabled="page <= 1"
-        class="px-4 py-2 border rounded disabled:opacity-50"
+        class="px-4 py-2 rounded disabled:opacity-50"
+        :style="buttonSecondaryStyle"
       >
         ← Zurück
       </button>
-      <span class="px-4 py-2">Seite {{ page }} von {{ Math.ceil(total / pageSize) }}</span>
+      <span class="px-4 py-2" :style="{ color: 'var(--color-text-secondary)' }">Seite {{ page }} von {{ Math.ceil(total / pageSize) }}</span>
       <button
         @click="page++; loadAgents()"
         :disabled="page * pageSize >= total"
-        class="px-4 py-2 border rounded disabled:opacity-50"
+        class="px-4 py-2 rounded disabled:opacity-50"
+        :style="buttonSecondaryStyle"
       >
         Weiter →
       </button>
@@ -131,7 +138,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
@@ -143,7 +150,26 @@ const pageSize = 50
 const loading = ref(false)
 const search = ref('')
 const deviceType = ref('')
-const offlineTimeout = ref(300) // Default 5 Minuten
+const offlineTimeout = ref(300)
+
+// Computed Styles
+const cardStyle = computed(() => ({
+  backgroundColor: 'var(--color-surface)',
+  borderColor: 'var(--color-border)'
+}))
+
+const inputStyle = computed(() => ({
+  backgroundColor: 'var(--color-surface-elevated)',
+  borderColor: 'var(--color-border)',
+  color: 'var(--color-text-primary)',
+  border: '1px solid var(--color-border)'
+}))
+
+const buttonSecondaryStyle = computed(() => ({
+  backgroundColor: 'var(--color-surface-elevated)',
+  color: 'var(--color-text-primary)',
+  border: '1px solid var(--color-border)'
+}))
 
 onMounted(async () => {
   await loadSettings()
@@ -196,7 +222,6 @@ function isOnline(lastSeen) {
   if (!lastSeen) return false
   const timeoutMs = offlineTimeout.value * 1000
   const cutoff = Date.now() - timeoutMs
-  // Z anhängen für UTC
   const timestamp = lastSeen.endsWith('Z') ? lastSeen : lastSeen + 'Z'
   return new Date(timestamp).getTime() > cutoff
 }
