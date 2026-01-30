@@ -196,7 +196,9 @@ function isOnline(lastSeen) {
   if (!lastSeen) return false
   const timeoutMs = offlineTimeout.value * 1000
   const cutoff = Date.now() - timeoutMs
-  return new Date(lastSeen).getTime() > cutoff
+  // Z anhängen für UTC
+  const timestamp = lastSeen.endsWith('Z') ? lastSeen : lastSeen + 'Z'
+  return new Date(timestamp).getTime() > cutoff
 }
 
 function formatTime(timestamp) {
