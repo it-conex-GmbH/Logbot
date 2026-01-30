@@ -1,216 +1,145 @@
-# LogBot Agent v2026.01.30.13.30.00
+# LogBot v2026.01.30.13.30.00
 
-**Log-Forwarder für Linux und Windows - Keine Abhängigkeiten!**
-
-Sendet System-Logs an den LogBot Server.
+**Zentraler Log-Server für Linux/Windows Systeme und Netzwerkgeräte**
 
 Entwickelt von Philipp Fischer  
 Kontakt: p.fischer@itconex.de
 
 ## Features
 
-- 📋 **Linux:** Nutzt vorhandenes rsyslog - kein Python nötig!
-- 📋 **Windows:** Reines PowerShell - kein Python nötig!
-- ⚡ **Sofort einsatzbereit** - Ein Befehl pro Plattform
-- 🔄 **Auto-Start** - Startet automatisch beim Boot
-- 🔧 **Keine Abhängigkeiten** - Nutzt nur vorhandene System-Tools
+- 📋 **Syslog-Empfang** auf UDP/TCP Port 514
+- 🖥️ **Automatische Geräteerkennung** (UniFi APs, Linux, Windows)
+- 🔍 **Echtzeit Log-Suche** mit Filtern
+- 🔗 **Webhook-Integration** für n8n, Make, Zapier (ohne Login!)
+- 📊 **Dashboard** mit Statistiken
+- 👥 **Benutzerverwaltung** mit Rollen
+- 💚 **Health Monitoring** für System-Ressourcen
+- 🐳 **Docker-basiert** für einfache Installation
+
+## Voraussetzungen
+
+- Linux Server (Ubuntu 20.04+ empfohlen)
+- Docker & Docker Compose
+- Root-Zugriff
 
 ## Installation
 
-### Linux
-
 ```bash
-# Via Git
-git clone https://github.com/DEIN-USERNAME/logbot-agent.git
-cd logbot-agent
-sudo bash install-linux.sh
+# Repository klonen
+git clone https://github.com/DEIN-USERNAME/logbot.git
+cd logbot
+
+# Installer ausführen
+sudo bash install.sh
 ```
 
 **Oder manuell:**
 ```bash
-tar -xzf logbot-agent-v2026.01.30.13.30.00.tar.gz
-cd logbot-agent-v2026.01.30.13.30.00
-sudo bash install-linux.sh
+tar -xzf logbot-v2026.01.30.13.30.00.tar.gz
+cd logbot-v2026.01.30.13.30.00
+sudo bash install.sh
 ```
 
-Der Installer:
-1. Installiert rsyslog falls nicht vorhanden
-2. Fragt nach Server-Adresse und Port
-3. Fragt nach Protokoll (UDP/TCP) und Log-Level
-4. Konfiguriert rsyslog automatisch
-5. Sendet Test-Nachrichten
+## Zugriff
 
-### Windows
+Nach der Installation:
 
-1. Archiv entpacken (z.B. nach `C:\Temp\logbot-agent`)
-2. **Rechtsklick** auf `install-windows.bat` → **"Als Administrator ausführen"**
-3. Server-Adresse eingeben
-4. Fertig!
+- **Web-Interface:** http://SERVER-IP
+- **API Docs:** http://SERVER-IP/api/docs
+- **Login:** admin / admin (bitte ändern!)
 
-Oder via PowerShell (als Admin):
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process
-.\install-windows.ps1
-```
-
-## Was wird installiert?
-
-### Linux
-- Konfigurationsdatei: `/etc/rsyslog.d/99-logbot.conf`
-- Nutzt den vorhandenen rsyslog-Dienst
-- Keine zusätzliche Software
-
-### Windows
-- Installation: `C:\ProgramData\LogBot-Agent\`
-- Scheduled Task: "LogBotAgent" (läuft als SYSTEM)
-- Reines PowerShell-Script
-
-## Test
-
-### Linux
-```bash
-# Manuell Test-Nachricht senden
-logger -t test "Hallo LogBot"
-
-# Oder via Installer
-sudo bash install-linux.sh test
-```
-
-### Windows (PowerShell als Admin)
-```powershell
-.\install-windows.ps1 -Test
-```
-
-## Deinstallation
-
-### Linux
-```bash
-sudo bash install-linux.sh uninstall
-```
-
-### Windows (PowerShell als Admin)
-```powershell
-.\install-windows.ps1 -Uninstall
-```
-
-## Verwaltung
+## Syslog-Quellen konfigurieren
 
 ### Linux (rsyslog)
+
 ```bash
-# Status
-systemctl status rsyslog
-
-# Neustart (nach Konfigurationsänderung)
-sudo systemctl restart rsyslog
-
-# Konfiguration anzeigen
-cat /etc/rsyslog.d/99-logbot.conf
-
-# Logs
-journalctl -u rsyslog -f
+# /etc/rsyslog.d/logbot.conf
+*.* @LOGBOT-IP:514
 ```
 
-### Windows (Scheduled Task)
-```powershell
-# Status
-Get-ScheduledTask -TaskName LogBotAgent
+### UniFi Controller
 
-# Starten
-Start-ScheduledTask -TaskName LogBotAgent
+Settings → System → Remote Logging → Enable + LogBot IP
+
+## Webhook-Nutzung
+
+Webhooks ermöglichen Zugriff ohne Login:
+
+```
+GET /api/webhook/{id}/call?token={token}
+```
+
+Ideal für n8n-Workflows:
+1. LogBot → Webhooks → Neuer Webhook
+2. Filter konfigurieren (Hostname, Level, etc.)
+3. URL in n8n HTTP Request Node einfügen
+
+## Verzeichnisstruktur
+
+```
+/opt/logbot/
+├── docker-compose.yml
+├── .env                 # Zugangsdaten (geheim!)
+├── backend/             # FastAPI Backend
+├── frontend/            # Vue.js Frontend
+├── syslog/              # Syslog Server
+├── caddy/               # Reverse Proxy
+└── db/                  # Datenbank-Schema
+```
+
+## Befehle
+
+```bash
+cd /opt/logbot
+
+# Status anzeigen
+docker compose ps
+
+# Logs anzeigen
+docker compose logs -f
+
+# Neustart
+docker compose restart
 
 # Stoppen
-Stop-ScheduledTask -TaskName LogBotAgent
+docker compose down
 
-# Konfiguration anzeigen
-Get-Content "$env:ProgramData\LogBot-Agent\config.json"
+# Starten
+docker compose up -d
+
+# Update (nach neuer Version)
+docker compose pull
+docker compose up -d --build
 ```
 
-## Fehlerbehebung
-
-### Logs kommen nicht an
-
-1. **Server erreichbar?**
-   ```bash
-   # Linux
-   nc -zvu LOGBOT_SERVER 514
-   
-   # Windows (PowerShell)
-   Test-NetConnection -ComputerName LOGBOT_SERVER -Port 514
-   ```
-
-2. **Firewall?**
-   - Linux: `sudo ufw allow 514/udp`
-   - Windows: Port 514 UDP ausgehend erlauben
-
-3. **LogBot Server läuft?**
-   ```bash
-   # Auf dem Server
-   docker compose ps
-   docker compose logs -f syslog
-   ```
-
-### Linux: rsyslog startet nicht
-```bash
-# Konfiguration testen
-sudo rsyslogd -N1
-
-# Fehler anzeigen
-sudo journalctl -u rsyslog -n 50
-```
-
-### Windows: Task läuft nicht
-```powershell
-# Task-Status prüfen
-Get-ScheduledTaskInfo -TaskName LogBotAgent
-
-# Manuell starten und Fehler sehen
-powershell.exe -File "C:\ProgramData\LogBot-Agent\LogBotAgent.ps1"
-```
-
-## Konfiguration anpassen
-
-### Linux
-
-Datei bearbeiten: `/etc/rsyslog.d/99-logbot.conf`
+## Datenbank-Backup
 
 ```bash
-# Beispiel: Nur Errors senden
-*.err @logbot-server:514
+# Backup erstellen
+docker compose exec postgres pg_dump -U logbot logbot > backup.sql
 
-# Beispiel: TCP statt UDP
-*.* @@logbot-server:514
-
-# Nach Änderung:
-sudo systemctl restart rsyslog
-```
-
-### Windows
-
-Datei bearbeiten: `C:\ProgramData\LogBot-Agent\config.json`
-
-```json
-{
-    "server_host": "logbot-server",
-    "server_port": 514,
-    "hostname": "MEIN-PC",
-    "log_sources": ["Application", "System", "Security"],
-    "min_level": "warning"
-}
-```
-
-Nach Änderung Task neustarten:
-```powershell
-Stop-ScheduledTask -TaskName LogBotAgent
-Start-ScheduledTask -TaskName LogBotAgent
+# Backup wiederherstellen
+docker compose exec -T postgres psql -U logbot logbot < backup.sql
 ```
 
 ## Changelog
 
 ### v2026.01.30.13.30.00 (2026-01-30)
-- Komplette Neuentwicklung ohne Python
-- Linux: Native rsyslog-Integration
-- Windows: Reines PowerShell
-- Keine externen Abhängigkeiten mehr
+- UniFi Netconsole Parsing Fix (Hex-ID != Hostname)
+- Öffentliche Webhook-Endpoints ohne Bearer Token
+- Verbessertes Health Monitoring
+- Settings-Verwaltung im Web-Interface
+- Log-Retention Funktion
+
+### v1.1.0
+- Webhook-Integration für n8n
+- PostgreSQL statt SQLite
+- Verbessertes Agent-Management
+
+### v1.0.0
+- Initiale Version
+- Basis Syslog-Empfang
+- Web-Interface
 
 ## Support
 
