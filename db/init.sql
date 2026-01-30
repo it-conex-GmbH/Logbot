@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS settings (
 
 -- Standard Admin: admin / admin
 INSERT INTO users (username, email, password_hash, role) 
-VALUES ('admin', 'admin@localhost', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.G4rXaWmJT9gVH2', 'admin')
+VALUES ('admin', 'admin@localhost', '$2b$12$XOE63DtzGEyiaLLBY05W0ulT6EVFIC243bkg7UivW1kfx0.bmmSj2', 'admin')
 ON CONFLICT (username) DO NOTHING;
 
 -- Standard-Einstellungen
