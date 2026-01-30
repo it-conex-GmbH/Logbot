@@ -2,11 +2,11 @@
  * ==============================================================================
  * Name:           Phil Fischer
  * E-Mail:         p.fischer@phytech.de
- * Version:        30.01.2026.19.28.45
+ * Version:        30.01.2026.19.35.45
  * ==============================================================================
  * 
- * LogBot Branding Store - Helleres Blau
- * ======================================
+ * LogBot Branding Store
+ * ======================
  * 
  * ==============================================================================
  */
@@ -40,12 +40,12 @@ export const useBrandingStore = defineStore('branding', () => {
     warning_color: '#f59e0b',
     danger_color: '#ef4444',
     
-    // Dark Mode - HELLERES BLAU
+    // Dark Mode - Custom
     dark_scheme: {
-      background: '#1e3a5f',
-      surface: '#2a4a6d',
-      surface_elevated: '#3a5a7d',
-      border: '#4a6a8d',
+      background: '#444464',
+      surface: '#313146',
+      surface_elevated: '#3a3a54',
+      border: '#45455f',
       text_primary: '#f8fafc',
       text_secondary: '#e2e8f0',
       text_muted: '#cbd5e1'
