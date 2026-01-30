@@ -38,7 +38,7 @@
     <!-- Agents Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div 
-        v-for="agent in agents" 
+        v-for="agent in agents"
         :key="agent.id"
         class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
       >
@@ -143,8 +143,23 @@ const pageSize = 50
 const loading = ref(false)
 const search = ref('')
 const deviceType = ref('')
+const offlineTimeout = ref(300) // Default 5 Minuten
 
-onMounted(() => loadAgents())
+onMounted(async () => {
+  await loadSettings()
+  await loadAgents()
+})
+
+async function loadSettings() {
+  try {
+    const data = await authStore.api('/api/settings')
+    if (data.settings?.agent_offline_timeout) {
+      offlineTimeout.value = data.settings.agent_offline_timeout
+    }
+  } catch (e) {
+    console.error('Settings laden fehlgeschlagen:', e)
+  }
+}
 
 async function loadAgents() {
   loading.value = true
@@ -155,7 +170,7 @@ async function loadAgents() {
     })
     if (search.value) params.append('search', search.value)
     if (deviceType.value) params.append('device_type', deviceType.value)
-    
+
     const data = await authStore.api(`/api/agents?${params}`)
     agents.value = data.items
     total.value = data.total
@@ -168,7 +183,7 @@ async function loadAgents() {
 
 async function deleteAgent(agent) {
   if (!confirm(`Agent "${agent.hostname}" wirklich löschen?`)) return
-  
+
   try {
     await authStore.api(`/api/agents/${agent.id}`, { method: 'DELETE' })
     loadAgents()
@@ -179,8 +194,9 @@ async function deleteAgent(agent) {
 
 function isOnline(lastSeen) {
   if (!lastSeen) return false
-  const fiveMinutesAgo = Date.now() - 5 * 60 * 1000
-  return new Date(lastSeen).getTime() > fiveMinutesAgo
+  const timeoutMs = offlineTimeout.value * 1000
+  const cutoff = Date.now() - timeoutMs
+  return new Date(lastSeen).getTime() > cutoff
 }
 
 function formatTime(timestamp) {
