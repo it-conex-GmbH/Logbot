@@ -2,12 +2,12 @@
  * ==============================================================================
  * Name:           Phil Fischer
  * E-Mail:         p.fischer@phytech.de
- * Version:        30.01.2026.18.52.17
+ * Version:        30.01.2026.19.28.15
  * ==============================================================================
  * 
  * LogBot CSS - Tailwind + Branding Theme System
  * ==============================================
- * Optimierte Kontraste für bessere Lesbarkeit
+ * Helleres Blau für Dark Mode
  * 
  * ==============================================================================
  */
@@ -30,11 +30,11 @@
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   
-  /* Dark Scheme - VERBESSERTE KONTRASTE */
-  --dark-bg: #1e293b;
-  --dark-surface: #334155;
-  --dark-surface-elevated: #475569;
-  --dark-border: #475569;
+  /* Dark Scheme - HELLERES BLAU */
+  --dark-bg: #1e3a5f;
+  --dark-surface: #2a4a6d;
+  --dark-surface-elevated: #3a5a7d;
+  --dark-border: #4a6a8d;
   --dark-text-primary: #f8fafc;
   --dark-text-secondary: #e2e8f0;
   --dark-text-muted: #cbd5e1;

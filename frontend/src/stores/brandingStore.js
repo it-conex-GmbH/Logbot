@@ -2,11 +2,11 @@
  * ==============================================================================
  * Name:           Phil Fischer
  * E-Mail:         p.fischer@phytech.de
- * Version:        30.01.2026.18.55.08
+ * Version:        30.01.2026.19.28.45
  * ==============================================================================
  * 
- * LogBot Branding Store - Bessere Kontraste
- * ==========================================
+ * LogBot Branding Store - Helleres Blau
+ * ======================================
  * 
  * ==============================================================================
  */
@@ -40,12 +40,12 @@ export const useBrandingStore = defineStore('branding', () => {
     warning_color: '#f59e0b',
     danger_color: '#ef4444',
     
-    // Dark Mode - BESSERE KONTRASTE
+    // Dark Mode - HELLERES BLAU
     dark_scheme: {
-      background: '#1e293b',
-      surface: '#334155',
-      surface_elevated: '#475569',
-      border: '#475569',
+      background: '#1e3a5f',
+      surface: '#2a4a6d',
+      surface_elevated: '#3a5a7d',
+      border: '#4a6a8d',
       text_primary: '#f8fafc',
       text_secondary: '#e2e8f0',
       text_muted: '#cbd5e1'
@@ -89,7 +89,6 @@ export const useBrandingStore = defineStore('branding', () => {
       console.error('[Branding] Fehler beim Laden:', err)
       error.value = err.message
       
-      // Bei Fehler trotzdem CSS anwenden mit Defaults
       const themeStore = useThemeStore()
       themeStore.initTheme('dark')
       applyCSS()
@@ -209,7 +208,6 @@ export const useBrandingStore = defineStore('branding', () => {
   function applyCSS() {
     const root = document.documentElement
     
-    // Markenfarben
     root.style.setProperty('--color-primary', config.primary_color)
     root.style.setProperty('--color-secondary', config.secondary_color)
     root.style.setProperty('--color-accent', config.accent_color)
@@ -217,7 +215,6 @@ export const useBrandingStore = defineStore('branding', () => {
     root.style.setProperty('--color-warning', config.warning_color)
     root.style.setProperty('--color-danger', config.danger_color)
     
-    // Dark Mode Farben
     root.style.setProperty('--dark-bg', config.dark_scheme.background)
     root.style.setProperty('--dark-surface', config.dark_scheme.surface)
     root.style.setProperty('--dark-surface-elevated', config.dark_scheme.surface_elevated)
@@ -226,7 +223,6 @@ export const useBrandingStore = defineStore('branding', () => {
     root.style.setProperty('--dark-text-secondary', config.dark_scheme.text_secondary)
     root.style.setProperty('--dark-text-muted', config.dark_scheme.text_muted)
     
-    // Light Mode Farben
     root.style.setProperty('--light-bg', config.light_scheme.background)
     root.style.setProperty('--light-surface', config.light_scheme.surface)
     root.style.setProperty('--light-surface-elevated', config.light_scheme.surface_elevated)
