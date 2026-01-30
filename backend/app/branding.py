@@ -1,19 +1,12 @@
 """
 ================================================================================
 Name:           Phil Fischer
-E-Mail:         p.fischer@phytech.de & p.fischer@itconex.de
-Version:        30.01.2026.17.03.18
+E-Mail:         p.fischer@phytech.de
+Version:        30.01.2026.19.42.15
 ================================================================================
 
 LogBot Branding API - Backend für Whitelabel-System
 ===================================================
-Stellt REST-API Endpunkte bereit für:
-- Laden/Speichern der Branding-Konfiguration
-- Logo und Favicon Upload
-- Reset auf Standardwerte
-
-Konfiguration wird in /app/data/branding_config.json gespeichert.
-Assets werden in /app/data/assets/ abgelegt.
 ================================================================================
 """
 
@@ -67,40 +60,40 @@ class BrandingConfig(BaseModel):
     favicon_path: Optional[str] = None
     
     # Theme
-    default_theme: str = "dark"  # 'dark' oder 'light'
+    default_theme: str = "dark"
     allow_theme_toggle: bool = True
     
-    # Markenfarben (beide Themes)
-    primary_color: str = "#0ea5e9"    # Hellblau - Buttons, Links
-    secondary_color: str = "#6366f1"  # Indigo - Sekundäre Akzente
-    accent_color: str = "#22c55e"     # Grün - Hervorhebungen
-    success_color: str = "#10b981"    # Smaragd - Erfolg
-    warning_color: str = "#f59e0b"    # Orange - Warnung
-    danger_color: str = "#ef4444"     # Rot - Fehler
+    # Markenfarben
+    primary_color: str = "#3b82f6"
+    secondary_color: str = "#8b5cf6"
+    accent_color: str = "#10b981"
+    success_color: str = "#22c55e"
+    warning_color: str = "#f59e0b"
+    danger_color: str = "#ef4444"
     
-    # Dark Mode Farben (itconex.de inspiriert)
+    # Dark Mode Farben - CUSTOM
     dark_scheme: ColorScheme = ColorScheme(
-        background="#0a0a0f",
-        surface="#111118",
-        surface_elevated="#1a1a24",
-        border="#2a2a3a",
+        background="#444464",
+        surface="#313146",
+        surface_elevated="#3a3a54",
+        border="#45455f",
         text_primary="#f8fafc",
-        text_secondary="#94a3b8",
-        text_muted="#64748b"
+        text_secondary="#e2e8f0",
+        text_muted="#cbd5e1"
     )
     
     # Light Mode Farben
     light_scheme: ColorScheme = ColorScheme(
-        background="#f8fafc",
+        background="#f1f5f9",
         surface="#ffffff",
-        surface_elevated="#f1f5f9",
+        surface_elevated="#f8fafc",
         border="#e2e8f0",
         text_primary="#0f172a",
-        text_secondary="#475569",
-        text_muted="#94a3b8"
+        text_secondary="#334155",
+        text_muted="#64748b"
     )
     
-    # Custom CSS für erweiterte Anpassungen
+    # Custom CSS
     custom_css: str = ""
 
 
@@ -161,13 +154,11 @@ async def upload_logo(file: UploadFile = File(...)):
     """POST /api/branding/upload/logo - Lädt Logo hoch"""
     ensure_directories()
     
-    # Validierung
     ext = os.path.splitext(file.filename)[1].lower()
     allowed = ['.png', '.jpg', '.jpeg', '.svg', '.webp']
     if ext not in allowed:
         raise HTTPException(400, f"Format nicht erlaubt. Erlaubt: {', '.join(allowed)}")
     
-    # Speichern mit Timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"logo_{timestamp}{ext}"
     filepath = os.path.join(ASSETS_DIR, filename)
@@ -175,7 +166,6 @@ async def upload_logo(file: UploadFile = File(...)):
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    # Config aktualisieren, altes Logo löschen
     config = load_config()
     if config.logo_path:
         old_path = os.path.join(ASSETS_DIR, config.logo_path)
@@ -193,13 +183,11 @@ async def upload_favicon(file: UploadFile = File(...)):
     """POST /api/branding/upload/favicon - Lädt Favicon hoch"""
     ensure_directories()
     
-    # Validierung
     ext = os.path.splitext(file.filename)[1].lower()
     allowed = ['.ico', '.png', '.svg']
     if ext not in allowed:
         raise HTTPException(400, f"Format nicht erlaubt. Erlaubt: {', '.join(allowed)}")
     
-    # Speichern mit Timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"favicon_{timestamp}{ext}"
     filepath = os.path.join(ASSETS_DIR, filename)
@@ -207,7 +195,6 @@ async def upload_favicon(file: UploadFile = File(...)):
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    # Config aktualisieren, altes Favicon löschen
     config = load_config()
     if config.favicon_path:
         old_path = os.path.join(ASSETS_DIR, config.favicon_path)
@@ -232,27 +219,13 @@ async def get_asset(filename: str):
 @branding_router.post("/reset")
 async def reset_branding():
     """POST /api/branding/reset - Setzt auf Standardwerte zurück"""
-    # Assets löschen
     if os.path.exists(ASSETS_DIR):
         for filename in os.listdir(ASSETS_DIR):
             filepath = os.path.join(ASSETS_DIR, filename)
             if os.path.isfile(filepath):
                 os.remove(filepath)
     
-    # Config löschen
     if os.path.exists(BRANDING_CONFIG_PATH):
         os.remove(BRANDING_CONFIG_PATH)
     
     return BrandingConfig()
-
-
-# =============================================================================
-# Integration in main.py:
-# 
-# from backend.branding import branding_router
-# app.include_router(branding_router)
-# 
-# Optional für direkten Asset-Zugriff:
-# from fastapi.staticfiles import StaticFiles
-# app.mount("/assets", StaticFiles(directory="/app/data/assets"), name="assets")
-# =============================================================================
