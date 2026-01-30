@@ -21,7 +21,6 @@
               v-model="settings.app_name"
               type="text"
               class="w-full border rounded px-3 py-2"
-              @change="saveSetting('app_name', settings.app_name)"
             >
           </div>
           
@@ -32,7 +31,6 @@
               type="text"
               class="w-full border rounded px-3 py-2"
               placeholder="Europe/Berlin"
-              @change="saveSetting('timezone', settings.timezone)"
             >
           </div>
           
@@ -43,7 +41,6 @@
               type="number"
               min="60"
               class="w-full border rounded px-3 py-2"
-              @change="saveSetting('agent_offline_timeout', settings.agent_offline_timeout)"
             >
             <p class="text-gray-500 text-xs mt-1">Nach dieser Zeit ohne Logs gilt ein Agent als offline</p>
           </div>
@@ -56,7 +53,6 @@
               min="100"
               max="10000"
               class="w-full border rounded px-3 py-2"
-              @change="saveSetting('max_logs_per_request', settings.max_logs_per_request)"
             >
           </div>
           
@@ -70,11 +66,22 @@
                 type="checkbox"
                 v-model="settings.enable_auto_discovery"
                 class="sr-only peer"
-                @change="saveSetting('enable_auto_discovery', settings.enable_auto_discovery)"
               >
               <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
             </label>
           </div>
+          
+          <button
+            @click="saveAllSettings"
+            :disabled="saving"
+            class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded disabled:opacity-50 mt-4"
+          >
+            {{ saving ? 'Speichere...' : '💾 Einstellungen speichern' }}
+          </button>
+          
+          <p v-if="saveMessage" :class="saveError ? 'text-red-500' : 'text-green-500'" class="text-sm text-center">
+            {{ saveMessage }}
+          </p>
         </div>
       </div>
       
@@ -186,6 +193,9 @@ const retentionDays = ref(90)
 const retentionPreview = ref(null)
 const newPassword = ref('')
 const confirmPassword = ref('')
+const saving = ref(false)
+const saveMessage = ref('')
+const saveError = ref(false)
 
 onMounted(async () => {
   try {
@@ -199,14 +209,35 @@ onMounted(async () => {
   }
 })
 
-async function saveSetting(key, value) {
+async function saveAllSettings() {
+  saving.value = true
+  saveMessage.value = ''
+  saveError.value = false
+  
   try {
-    await authStore.api(`/api/settings/${key}`, {
-      method: 'PUT',
-      body: { value }
-    })
+    const settingsToSave = [
+      ['app_name', settings.value.app_name],
+      ['timezone', settings.value.timezone],
+      ['agent_offline_timeout', settings.value.agent_offline_timeout],
+      ['max_logs_per_request', settings.value.max_logs_per_request],
+      ['enable_auto_discovery', settings.value.enable_auto_discovery],
+      ['log_retention_days', retentionDays.value]
+    ]
+    
+    for (const [key, value] of settingsToSave) {
+      await authStore.api(`/api/settings/${key}`, {
+        method: 'PUT',
+        body: { value }
+      })
+    }
+    
+    saveMessage.value = '✓ Einstellungen gespeichert!'
+    setTimeout(() => { saveMessage.value = '' }, 3000)
   } catch (e) {
-    alert('Fehler: ' + e.message)
+    saveError.value = true
+    saveMessage.value = 'Fehler: ' + e.message
+  } finally {
+    saving.value = false
   }
 }
 
