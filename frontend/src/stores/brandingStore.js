@@ -2,15 +2,11 @@
  * ==============================================================================
  * Name:           Phil Fischer
  * E-Mail:         p.fischer@phytech.de
- * Version:        30.01.2026.17.43.22
+ * Version:        30.01.2026.18.55.08
  * ==============================================================================
  * 
- * LogBot Branding Store - Pinia Store für Whitelabel-Konfiguration
- * =================================================================
- * Lädt die Branding-Einstellungen vom Backend und wendet sie an:
- * - CSS-Variablen für Farben
- * - Firmenname, Logo, Favicon
- * - Custom CSS
+ * LogBot Branding Store - Bessere Kontraste
+ * ==========================================
  * 
  * ==============================================================================
  */
@@ -19,19 +15,9 @@ import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
 import { useThemeStore } from './themeStore'
 
-// =============================================================================
-// API Base URL - anpassen falls nötig
-// =============================================================================
 const API_BASE = '/api/branding'
 
-// =============================================================================
-// Branding Store Definition
-// =============================================================================
 export const useBrandingStore = defineStore('branding', () => {
-  
-  // ===========================================================================
-  // State
-  // ===========================================================================
   
   const loading = ref(true)
   const error = ref(null)
@@ -45,36 +31,39 @@ export const useBrandingStore = defineStore('branding', () => {
     favicon_path: null,
     default_theme: 'dark',
     allow_theme_toggle: true,
-    primary_color: '#0ea5e9',
-    secondary_color: '#6366f1',
-    accent_color: '#22c55e',
-    success_color: '#10b981',
+    
+    // Markenfarben
+    primary_color: '#3b82f6',
+    secondary_color: '#8b5cf6',
+    accent_color: '#10b981',
+    success_color: '#22c55e',
     warning_color: '#f59e0b',
     danger_color: '#ef4444',
+    
+    // Dark Mode - BESSERE KONTRASTE
     dark_scheme: {
-      background: '#0a0a0f',
-      surface: '#111118',
-      surface_elevated: '#1a1a24',
-      border: '#2a2a3a',
+      background: '#1e293b',
+      surface: '#334155',
+      surface_elevated: '#475569',
+      border: '#475569',
       text_primary: '#f8fafc',
-      text_secondary: '#94a3b8',
-      text_muted: '#64748b'
+      text_secondary: '#e2e8f0',
+      text_muted: '#cbd5e1'
     },
+    
+    // Light Mode
     light_scheme: {
-      background: '#f8fafc',
+      background: '#f1f5f9',
       surface: '#ffffff',
-      surface_elevated: '#f1f5f9',
+      surface_elevated: '#f8fafc',
       border: '#e2e8f0',
       text_primary: '#0f172a',
-      text_secondary: '#475569',
-      text_muted: '#94a3b8'
+      text_secondary: '#334155',
+      text_muted: '#64748b'
     },
+    
     custom_css: ''
   })
-  
-  // ===========================================================================
-  // Actions
-  // ===========================================================================
   
   async function loadConfig() {
     loading.value = true
@@ -99,6 +88,10 @@ export const useBrandingStore = defineStore('branding', () => {
     } catch (err) {
       console.error('[Branding] Fehler beim Laden:', err)
       error.value = err.message
+      
+      // Bei Fehler trotzdem CSS anwenden mit Defaults
+      const themeStore = useThemeStore()
+      themeStore.initTheme('dark')
       applyCSS()
     } finally {
       loading.value = false
@@ -213,13 +206,10 @@ export const useBrandingStore = defineStore('branding', () => {
     applyCSS()
   }
   
-  // ===========================================================================
-  // CSS-Variablen Injection
-  // ===========================================================================
-  
   function applyCSS() {
     const root = document.documentElement
     
+    // Markenfarben
     root.style.setProperty('--color-primary', config.primary_color)
     root.style.setProperty('--color-secondary', config.secondary_color)
     root.style.setProperty('--color-accent', config.accent_color)
@@ -227,6 +217,7 @@ export const useBrandingStore = defineStore('branding', () => {
     root.style.setProperty('--color-warning', config.warning_color)
     root.style.setProperty('--color-danger', config.danger_color)
     
+    // Dark Mode Farben
     root.style.setProperty('--dark-bg', config.dark_scheme.background)
     root.style.setProperty('--dark-surface', config.dark_scheme.surface)
     root.style.setProperty('--dark-surface-elevated', config.dark_scheme.surface_elevated)
@@ -235,6 +226,7 @@ export const useBrandingStore = defineStore('branding', () => {
     root.style.setProperty('--dark-text-secondary', config.dark_scheme.text_secondary)
     root.style.setProperty('--dark-text-muted', config.dark_scheme.text_muted)
     
+    // Light Mode Farben
     root.style.setProperty('--light-bg', config.light_scheme.background)
     root.style.setProperty('--light-surface', config.light_scheme.surface)
     root.style.setProperty('--light-surface-elevated', config.light_scheme.surface_elevated)
@@ -273,10 +265,6 @@ export const useBrandingStore = defineStore('branding', () => {
     }
   }
   
-  // ===========================================================================
-  // Getters
-  // ===========================================================================
-  
   function getLogoUrl() {
     return config.logo_path ? `${API_BASE}/assets/${config.logo_path}` : null
   }
@@ -285,9 +273,6 @@ export const useBrandingStore = defineStore('branding', () => {
     return config.favicon_path ? `${API_BASE}/assets/${config.favicon_path}` : null
   }
   
-  // ===========================================================================
-  // Public API
-  // ===========================================================================
   return {
     loading,
     error,
