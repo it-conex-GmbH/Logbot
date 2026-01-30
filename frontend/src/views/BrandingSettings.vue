@@ -1,335 +1,231 @@
-<!--
+"""
 ================================================================================
 Name:           Phil Fischer
 E-Mail:         p.fischer@phytech.de
-Version:        30.01.2026.18.38.22
+Version:        30.01.2026.19.42.15
 ================================================================================
 
-LogBot Branding Settings - Admin-Seite mit Tailwind CSS
-========================================================
-
+LogBot Branding API - Backend für Whitelabel-System
+===================================================
 ================================================================================
--->
+"""
 
-<template>
-  <div class="p-6">
-    <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-800">🎨 Branding Einstellungen</h1>
-      <p class="text-gray-600">Passe das Erscheinungsbild von LogBot an deine Marke an.</p>
-    </div>
+from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
+from typing import Optional
+import json
+import os
+import shutil
+from datetime import datetime
 
-    <!-- Loading -->
-    <div v-if="brandingStore.loading" class="text-center py-12 text-gray-500">
-      Lade Einstellungen...
-    </div>
+# =============================================================================
+# Router-Instanz
+# =============================================================================
+branding_router = APIRouter(prefix="/api/branding", tags=["Branding"])
 
-    <!-- Settings Grid -->
-    <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      
-      <!-- Allgemeine Einstellungen -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Allgemein</h2>
-        
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Firmenname</label>
-            <input v-model="brandingStore.config.company_name" type="text" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
+# =============================================================================
+# Pfade
+# =============================================================================
+BRANDING_CONFIG_PATH = "/app/data/branding_config.json"
+ASSETS_DIR = "/app/data/assets"
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tagline</label>
-            <input v-model="brandingStore.config.tagline" type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Footer Text</label>
-            <input v-model="brandingStore.config.footer_text" type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
+# =============================================================================
+# Pydantic-Modelle
+# =============================================================================
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Support E-Mail</label>
-            <input v-model="brandingStore.config.support_email" type="email"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-          </div>
-        </div>
-      </div>
+class ColorScheme(BaseModel):
+    """Farbschema für Dark oder Light Mode"""
+    background: str = Field(description="Haupt-Hintergrund")
+    surface: str = Field(description="Karten, Modals")
+    surface_elevated: str = Field(description="Dropdowns, Tooltips")
+    border: str = Field(description="Rahmenfarbe")
+    text_primary: str = Field(description="Primärer Text")
+    text_secondary: str = Field(description="Sekundärer Text")
+    text_muted: str = Field(description="Gedämpfter Text")
 
-      <!-- Logo & Favicon -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Logo & Favicon</h2>
-        
-        <div class="space-y-4">
-          <!-- Logo -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Logo</label>
-            <div class="flex items-center gap-4">
-              <div class="w-20 h-20 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden">
-                <img v-if="brandingStore.getLogoUrl()" :src="brandingStore.getLogoUrl()" alt="Logo" class="max-w-full max-h-full object-contain" />
-                <span v-else class="text-gray-400 text-xs">Kein Logo</span>
-              </div>
-              <input type="file" accept=".png,.jpg,.jpeg,.svg,.webp" @change="handleLogoUpload" ref="logoInput" class="hidden" />
-              <button @click="$refs.logoInput.click()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                Logo hochladen
-              </button>
-            </div>
-          </div>
 
-          <!-- Favicon -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden">
-                <img v-if="brandingStore.getFaviconUrl()" :src="brandingStore.getFaviconUrl()" alt="Favicon" class="max-w-full max-h-full object-contain" />
-                <span v-else class="text-gray-400 text-xs">—</span>
-              </div>
-              <input type="file" accept=".ico,.png,.svg" @change="handleFaviconUpload" ref="faviconInput" class="hidden" />
-              <button @click="$refs.faviconInput.click()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                Favicon hochladen
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+class BrandingConfig(BaseModel):
+    """Vollständige Branding-Konfiguration"""
+    
+    # Allgemein
+    company_name: str = "LogBot"
+    tagline: str = "Centralized Log Management"
+    footer_text: str = "© 2026 LogBot. All rights reserved."
+    support_email: str = "support@example.com"
+    
+    # Assets
+    logo_path: Optional[str] = None
+    favicon_path: Optional[str] = None
+    
+    # Theme
+    default_theme: str = "dark"
+    allow_theme_toggle: bool = True
+    
+    # Markenfarben
+    primary_color: str = "#3b82f6"
+    secondary_color: str = "#8b5cf6"
+    accent_color: str = "#10b981"
+    success_color: str = "#22c55e"
+    warning_color: str = "#f59e0b"
+    danger_color: str = "#ef4444"
+    
+    # Dark Mode Farben - CUSTOM
+    dark_scheme: ColorScheme = ColorScheme(
+        background="#444464",
+        surface="#313146",
+        surface_elevated="#3a3a54",
+        border="#45455f",
+        text_primary="#f8fafc",
+        text_secondary="#e2e8f0",
+        text_muted="#cbd5e1"
+    )
+    
+    # Light Mode Farben
+    light_scheme: ColorScheme = ColorScheme(
+        background="#f1f5f9",
+        surface="#ffffff",
+        surface_elevated="#f8fafc",
+        border="#e2e8f0",
+        text_primary="#0f172a",
+        text_secondary="#334155",
+        text_muted="#64748b"
+    )
+    
+    # Custom CSS
+    custom_css: str = ""
 
-      <!-- Theme Einstellungen -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Theme</h2>
-        
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Standard Theme</label>
-            <select v-model="brandingStore.config.default_theme"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="dark">Dark Mode</option>
-              <option value="light">Light Mode</option>
-            </select>
-          </div>
 
-          <div class="flex items-center gap-2">
-            <input type="checkbox" id="allow_toggle" v-model="brandingStore.config.allow_theme_toggle" 
-              class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
-            <label for="allow_toggle" class="text-sm text-gray-700">Theme-Wechsel erlauben</label>
-          </div>
-        </div>
-      </div>
+# =============================================================================
+# Hilfsfunktionen
+# =============================================================================
 
-      <!-- Markenfarben -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Markenfarben</h2>
-        
-        <div class="grid grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Primär</label>
-            <input type="color" v-model="brandingStore.config.primary_color" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.primary_color }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Sekundär</label>
-            <input type="color" v-model="brandingStore.config.secondary_color" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.secondary_color }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Akzent</label>
-            <input type="color" v-model="brandingStore.config.accent_color" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.accent_color }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Erfolg</label>
-            <input type="color" v-model="brandingStore.config.success_color" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.success_color }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Warnung</label>
-            <input type="color" v-model="brandingStore.config.warning_color" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.warning_color }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Fehler</label>
-            <input type="color" v-model="brandingStore.config.danger_color" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.danger_color }}</span>
-          </div>
-        </div>
-      </div>
+def ensure_directories():
+    """Erstellt benötigte Verzeichnisse"""
+    config_dir = os.path.dirname(BRANDING_CONFIG_PATH)
+    if config_dir:
+        os.makedirs(config_dir, exist_ok=True)
+    os.makedirs(ASSETS_DIR, exist_ok=True)
 
-      <!-- Dark Mode Farben -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Dark Mode Farben</h2>
-        
-        <div class="grid grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Hintergrund</label>
-            <input type="color" v-model="brandingStore.config.dark_scheme.background" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.background }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Oberfläche</label>
-            <input type="color" v-model="brandingStore.config.dark_scheme.surface" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.surface }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Rahmen</label>
-            <input type="color" v-model="brandingStore.config.dark_scheme.border" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.border }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Text Primär</label>
-            <input type="color" v-model="brandingStore.config.dark_scheme.text_primary" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.text_primary }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Text Sekundär</label>
-            <input type="color" v-model="brandingStore.config.dark_scheme.text_secondary" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.text_secondary }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Text Muted</label>
-            <input type="color" v-model="brandingStore.config.dark_scheme.text_muted" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.dark_scheme.text_muted }}</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Light Mode Farben -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Light Mode Farben</h2>
-        
-        <div class="grid grid-cols-3 gap-4">
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Hintergrund</label>
-            <input type="color" v-model="brandingStore.config.light_scheme.background" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.background }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Oberfläche</label>
-            <input type="color" v-model="brandingStore.config.light_scheme.surface" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.surface }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Rahmen</label>
-            <input type="color" v-model="brandingStore.config.light_scheme.border" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.border }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Text Primär</label>
-            <input type="color" v-model="brandingStore.config.light_scheme.text_primary" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.text_primary }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Text Sekundär</label>
-            <input type="color" v-model="brandingStore.config.light_scheme.text_secondary" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.text_secondary }}</span>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-600 mb-1">Text Muted</label>
-            <input type="color" v-model="brandingStore.config.light_scheme.text_muted" @input="brandingStore.applyCSS()"
-              class="w-full h-10 rounded cursor-pointer border border-gray-300" />
-            <span class="text-xs text-gray-500 font-mono">{{ brandingStore.config.light_scheme.text_muted }}</span>
-          </div>
-        </div>
-      </div>
+def load_config() -> BrandingConfig:
+    """Lädt Konfiguration aus JSON oder gibt Default zurück"""
+    ensure_directories()
+    
+    if os.path.exists(BRANDING_CONFIG_PATH):
+        try:
+            with open(BRANDING_CONFIG_PATH, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return BrandingConfig(**data)
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"[Branding] Config-Fehler: {e}")
+            return BrandingConfig()
+    
+    return BrandingConfig()
 
-      <!-- Custom CSS -->
-      <div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Custom CSS</h2>
-        <textarea v-model="brandingStore.config.custom_css" rows="5" @input="brandingStore.applyCSS()"
-          placeholder="/* Eigene CSS-Regeln hier einfügen */"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
-      </div>
-    </div>
 
-    <!-- Action Buttons -->
-    <div class="flex justify-end gap-4 mt-6 pt-6 border-t">
-      <button @click="handleReset" :disabled="saving"
-        class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50">
-        Zurücksetzen
-      </button>
-      <button @click="handleSave" :disabled="saving"
-        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-        {{ saving ? 'Speichert...' : 'Speichern' }}
-      </button>
-    </div>
+def save_config(config: BrandingConfig) -> None:
+    """Speichert Konfiguration als JSON"""
+    ensure_directories()
+    with open(BRANDING_CONFIG_PATH, 'w', encoding='utf-8') as f:
+        json.dump(config.model_dump(), f, indent=2, ensure_ascii=False)
 
-    <!-- Toast -->
-    <div v-if="toast.show" 
-      :class="['fixed bottom-6 right-6 px-6 py-3 rounded-lg text-white font-medium shadow-lg z-50', toast.type === 'success' ? 'bg-green-500' : 'bg-red-500']">
-      {{ toast.message }}
-    </div>
-  </div>
-</template>
 
-<script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useBrandingStore } from '../stores/brandingStore'
+# =============================================================================
+# API-Endpunkte
+# =============================================================================
 
-const brandingStore = useBrandingStore()
-const saving = ref(false)
-const logoInput = ref(null)
-const faviconInput = ref(null)
+@branding_router.get("/config", response_model=BrandingConfig)
+async def get_branding_config():
+    """GET /api/branding/config - Lädt aktuelle Konfiguration"""
+    return load_config()
 
-const toast = reactive({ show: false, message: '', type: 'success' })
 
-function showToast(message, type = 'success') {
-  toast.message = message
-  toast.type = type
-  toast.show = true
-  setTimeout(() => { toast.show = false }, 3000)
-}
+@branding_router.put("/config", response_model=BrandingConfig)
+async def update_branding_config(config: BrandingConfig):
+    """PUT /api/branding/config - Speichert Konfiguration"""
+    save_config(config)
+    return config
 
-async function handleSave() {
-  saving.value = true
-  const success = await brandingStore.saveConfig()
-  showToast(success ? 'Gespeichert!' : 'Fehler beim Speichern!', success ? 'success' : 'error')
-  saving.value = false
-}
 
-async function handleReset() {
-  if (!confirm('Wirklich alle Einstellungen zurücksetzen?')) return
-  saving.value = true
-  const success = await brandingStore.resetToDefaults()
-  showToast(success ? 'Zurückgesetzt!' : 'Fehler!', success ? 'success' : 'error')
-  saving.value = false
-}
+@branding_router.post("/upload/logo")
+async def upload_logo(file: UploadFile = File(...)):
+    """POST /api/branding/upload/logo - Lädt Logo hoch"""
+    ensure_directories()
+    
+    ext = os.path.splitext(file.filename)[1].lower()
+    allowed = ['.png', '.jpg', '.jpeg', '.svg', '.webp']
+    if ext not in allowed:
+        raise HTTPException(400, f"Format nicht erlaubt. Erlaubt: {', '.join(allowed)}")
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"logo_{timestamp}{ext}"
+    filepath = os.path.join(ASSETS_DIR, filename)
+    
+    with open(filepath, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    config = load_config()
+    if config.logo_path:
+        old_path = os.path.join(ASSETS_DIR, config.logo_path)
+        if os.path.exists(old_path):
+            os.remove(old_path)
+    
+    config.logo_path = filename
+    save_config(config)
+    
+    return {"path": filename, "message": "Logo hochgeladen"}
 
-async function handleLogoUpload(event) {
-  const file = event.target.files[0]
-  if (!file) return
-  const success = await brandingStore.uploadLogo(file)
-  showToast(success ? 'Logo hochgeladen!' : 'Fehler!', success ? 'success' : 'error')
-  event.target.value = ''
-}
 
-async function handleFaviconUpload(event) {
-  const file = event.target.files[0]
-  if (!file) return
-  const success = await brandingStore.uploadFavicon(file)
-  showToast(success ? 'Favicon hochgeladen!' : 'Fehler!', success ? 'success' : 'error')
-  event.target.value = ''
-}
+@branding_router.post("/upload/favicon")
+async def upload_favicon(file: UploadFile = File(...)):
+    """POST /api/branding/upload/favicon - Lädt Favicon hoch"""
+    ensure_directories()
+    
+    ext = os.path.splitext(file.filename)[1].lower()
+    allowed = ['.ico', '.png', '.svg']
+    if ext not in allowed:
+        raise HTTPException(400, f"Format nicht erlaubt. Erlaubt: {', '.join(allowed)}")
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"favicon_{timestamp}{ext}"
+    filepath = os.path.join(ASSETS_DIR, filename)
+    
+    with open(filepath, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    config = load_config()
+    if config.favicon_path:
+        old_path = os.path.join(ASSETS_DIR, config.favicon_path)
+        if os.path.exists(old_path):
+            os.remove(old_path)
+    
+    config.favicon_path = filename
+    save_config(config)
+    
+    return {"path": filename, "message": "Favicon hochgeladen"}
 
-onMounted(() => {
-  if (brandingStore.loading) {
-    brandingStore.loadConfig()
-  }
-})
-</script>
+
+@branding_router.get("/assets/{filename}")
+async def get_asset(filename: str):
+    """GET /api/branding/assets/{filename} - Liefert Asset aus"""
+    filepath = os.path.join(ASSETS_DIR, filename)
+    if not os.path.exists(filepath):
+        raise HTTPException(404, "Asset nicht gefunden")
+    return FileResponse(filepath)
+
+
+@branding_router.post("/reset")
+async def reset_branding():
+    """POST /api/branding/reset - Setzt auf Standardwerte zurück"""
+    if os.path.exists(ASSETS_DIR):
+        for filename in os.listdir(ASSETS_DIR):
+            filepath = os.path.join(ASSETS_DIR, filename)
+            if os.path.isfile(filepath):
+                os.remove(filepath)
+    
+    if os.path.exists(BRANDING_CONFIG_PATH):
+        os.remove(BRANDING_CONFIG_PATH)
+    
+    return BrandingConfig()
