@@ -15,6 +15,7 @@ from .database import get_db
 from .models import Webhook, Log
 from .schemas import LogResponse, LogDetailResponse
 from .routes import auth_router, health_router, users_router, agents_router, logs_router, webhooks_router, settings_router
+from .branding import branding_router
 
 app = FastAPI(
     title="LogBot",
@@ -33,6 +34,7 @@ app.include_router(users_router)
 app.include_router(agents_router)
 app.include_router(logs_router)
 app.include_router(webhooks_router)
+app.include_router(branding_router)
 app.include_router(settings_router)
 
 # Öffentlicher Webhook Endpoint - KEINE Auth!
