@@ -30,7 +30,7 @@ class Agent(Base):
     device_type = Column(String(50), default="unknown")
     last_seen = Column(DateTime, default=datetime.utcnow)
     first_seen = Column(DateTime, default=datetime.utcnow)
-    metadata = Column(JSON, default=dict)
+    extra_data = Column(JSON, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow)
     logs = relationship("Log", back_populates="agent")
 
@@ -46,7 +46,7 @@ class Log(Base):
     source = Column(String(100))
     message = Column(Text)
     raw_message = Column(Text)
-    metadata = Column(JSON, default=dict)
+    extra_data = Column(JSON, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow)
     agent = relationship("Agent", back_populates="logs")
 
