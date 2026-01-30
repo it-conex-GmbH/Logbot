@@ -2,11 +2,12 @@
  * ==============================================================================
  * Name:           Phil Fischer
  * E-Mail:         p.fischer@phytech.de
- * Version:        30.01.2026.18.45.33
+ * Version:        30.01.2026.18.52.17
  * ==============================================================================
  * 
  * LogBot CSS - Tailwind + Branding Theme System
  * ==============================================
+ * Optimierte Kontraste für bessere Lesbarkeit
  * 
  * ==============================================================================
  */
@@ -17,52 +18,43 @@
 @tailwind utilities;
 
 /* =============================================================================
-   Default CSS Variables (Dark Mode als Default)
+   Default CSS Variables
    ============================================================================= */
 
 :root {
   /* Markenfarben */
-  --color-primary: #0ea5e9;
-  --color-secondary: #6366f1;
-  --color-accent: #22c55e;
-  --color-success: #10b981;
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-accent: #10b981;
+  --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   
-  /* Dark Mode als Default */
-  --color-bg: #111827;
-  --color-surface: #1f2937;
-  --color-surface-elevated: #374151;
-  --color-border: #374151;
-  --color-text-primary: #f9fafb;
-  --color-text-secondary: #d1d5db;
-  --color-text-muted: #9ca3af;
+  /* Dark Scheme - VERBESSERTE KONTRASTE */
+  --dark-bg: #1e293b;
+  --dark-surface: #334155;
+  --dark-surface-elevated: #475569;
+  --dark-border: #475569;
+  --dark-text-primary: #f8fafc;
+  --dark-text-secondary: #e2e8f0;
+  --dark-text-muted: #cbd5e1;
   
-  /* Dark Scheme (für brandingStore) */
-  --dark-bg: #111827;
-  --dark-surface: #1f2937;
-  --dark-surface-elevated: #374151;
-  --dark-border: #374151;
-  --dark-text-primary: #f9fafb;
-  --dark-text-secondary: #d1d5db;
-  --dark-text-muted: #9ca3af;
-  
-  /* Light Scheme (für brandingStore) */
-  --light-bg: #f3f4f6;
+  /* Light Scheme */
+  --light-bg: #f1f5f9;
   --light-surface: #ffffff;
-  --light-surface-elevated: #f9fafb;
-  --light-border: #e5e7eb;
-  --light-text-primary: #111827;
-  --light-text-secondary: #4b5563;
-  --light-text-muted: #6b7280;
+  --light-surface-elevated: #f8fafc;
+  --light-border: #e2e8f0;
+  --light-text-primary: #0f172a;
+  --light-text-secondary: #334155;
+  --light-text-muted: #64748b;
 }
 
 /* =============================================================================
-   Dark Mode (data-theme="dark")
+   Dark Mode (Default)
    ============================================================================= */
 
-[data-theme="dark"],
-:root {
+:root,
+[data-theme="dark"] {
   --color-bg: var(--dark-bg);
   --color-surface: var(--dark-surface);
   --color-surface-elevated: var(--dark-surface-elevated);
@@ -73,7 +65,7 @@
 }
 
 /* =============================================================================
-   Light Mode (data-theme="light")
+   Light Mode
    ============================================================================= */
 
 [data-theme="light"] {
