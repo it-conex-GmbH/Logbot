@@ -1,10 +1,32 @@
 #!/bin/bash
 # ==============================================================================
-# Name:        Philipp Fischer
-# Kontakt:     p.fischer@itconex.de
-# Version:     2026.01.30.13.30.00
-# Beschreibung: LogBot v2026.01.30.13.30.00 - Installations-Script
-#               Installiert LogBot mit Docker Compose
+#  _                 ____        _
+# | |    ___   __ _ | __ )  ___ | |_
+# | |   / _ \ / _` ||  _ \ / _ \| __|
+# | |__| (_) | (_| || |_) | (_) | |_
+# |_____\___/ \__, ||____/ \___/ \__|
+#             |___/
+# ==============================================================================
+# INSTALLATIONS-SCRIPT
+# ==============================================================================
+#
+# Autor:        Philipp Fischer
+# Kontakt:      p.fischer@itconex.de
+# Version:      2026.01.30.13.30.00
+# Erstellt:     Januar 2026
+#
+# Beschreibung:
+#   Automatisiertes Installations-Script für LogBot.
+#   Installiert alle erforderlichen Komponenten via Docker Compose.
+#
+# Voraussetzungen:
+#   - Linux System (Debian/Ubuntu empfohlen)
+#   - Root-Rechte
+#   - Internetzugang (für Docker Installation)
+#
+# Verwendung:
+#   sudo bash install.sh
+#
 # ==============================================================================
 
 set -e
