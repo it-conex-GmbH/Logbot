@@ -1,8 +1,8 @@
 # ==============================================================================
 # Name:        Philipp Fischer
 # Kontakt:     p.fischer@itconex.de
-# Version:     2026.01.30.13.30.00
-# Beschreibung: LogBot v2026.01.30.13.30.00 - SQLAlchemy Models
+# Version:     2026.02.11.18.30.00
+# Beschreibung: LogBot v2026.02.11.18.30.00 - SQLAlchemy Models
 # ==============================================================================
 
 from datetime import datetime
@@ -62,6 +62,15 @@ class Webhook(Base):
     is_active = Column(Boolean, default=True)
     call_count = Column(Integer, default=0)
     last_called_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class AgentToken(Base):
+    __tablename__ = "agent_tokens"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    token = Column(String(64), unique=True, nullable=False)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

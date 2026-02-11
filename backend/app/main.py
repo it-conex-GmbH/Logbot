@@ -1,20 +1,20 @@
 # ==============================================================================
 # Name:        Philipp Fischer
 # Kontakt:     p.fischer@itconex.de
-# Version:     2026.01.30.13.30.00
-# Beschreibung: LogBot v2026.01.30.13.30.00 - FastAPI Hauptanwendung
+# Version:     2026.02.11.18.30.00
+# Beschreibung: LogBot v2026.02.11.18.30.00 - FastAPI Hauptanwendung
 # ==============================================================================
 
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, Query, Depends
+from fastapi import FastAPI, HTTPException, Query, Header, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from .config import settings
 from .database import get_db
-from .models import Webhook, Log
-from .schemas import LogResponse, LogDetailResponse
-from .routes import auth_router, health_router, users_router, agents_router, logs_router, webhooks_router, settings_router
+from .models import Webhook, Log, Agent, AgentToken
+from .schemas import LogResponse, LogDetailResponse, LogIngestRequest, LogIngestResponse
+from .routes import auth_router, health_router, users_router, agents_router, agent_tokens_router, logs_router, webhooks_router, settings_router
 from .branding import branding_router
 
 app = FastAPI(
@@ -32,6 +32,7 @@ app.include_router(auth_router)
 app.include_router(health_router)
 app.include_router(users_router)
 app.include_router(agents_router)
+app.include_router(agent_tokens_router)
 app.include_router(logs_router)
 app.include_router(webhooks_router)
 app.include_router(branding_router)
@@ -70,6 +71,54 @@ async def call_webhook(webhook_id: int, token: str = Query(...), db: AsyncSessio
                 raw_message=l.raw_message, metadata=l.metadata or {}) for l in logs]
     return [LogResponse(id=l.id, hostname=l.hostname, ip_address=l.ip_address, timestamp=l.timestamp,
             level=l.level, source=l.source, message=l.message) for l in logs]
+
+# Öffentlicher Ingest-Endpoint - Auth via Agent-Token (Bearer)
+@app.post("/api/agents/ingest", response_model=LogIngestResponse, tags=["Agent Ingest"])
+async def ingest_logs(
+    data: LogIngestRequest,
+    request: Request,
+    authorization: str = Header(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Empfängt Logs von authentifizierten Agents via HTTPS."""
+    # Token aus Bearer Header extrahieren
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Bearer Token erforderlich")
+    token_value = authorization[7:]
+
+    # Token validieren
+    result = await db.execute(
+        select(AgentToken).where(AgentToken.token == token_value, AgentToken.is_active == True))
+    agent_token = result.scalar_one_or_none()
+    if not agent_token:
+        raise HTTPException(status_code=401, detail="Ungültiger Agent-Token")
+
+    # Agent finden oder erstellen
+    client_ip = request.client.host if request.client else "unknown"
+    result = await db.execute(
+        select(Agent).where(Agent.hostname == data.hostname, Agent.ip_address == client_ip))
+    agent = result.scalar_one_or_none()
+    if agent:
+        agent.last_seen = datetime.utcnow()
+    else:
+        agent = Agent(
+            hostname=data.hostname, ip_address=client_ip,
+            device_type="windows_agent",
+            extra_data={"auth": "token", "token_name": agent_token.name})
+        db.add(agent)
+        await db.flush()
+
+    # Logs einfügen
+    for event in data.events:
+        log = Log(
+            agent_id=agent.id, hostname=data.hostname, ip_address=client_ip,
+            facility=1, level=event.level, source=event.source,
+            message=event.message, raw_message=event.message,
+            extra_data={"ingested_via": "https"})
+        db.add(log)
+
+    await db.commit()
+    return LogIngestResponse(accepted=len(data.events))
 
 @app.get("/api")
 async def root():

@@ -1,17 +1,18 @@
 # ==============================================================================
 # Name:        Philipp Fischer
 # Kontakt:     p.fischer@itconex.de
-# Version:     2026.01.30.13.30.00
-# Beschreibung: LogBot v2026.01.30.13.30.00 - Agents API Endpoints
+# Version:     2026.02.11.18.30.00
+# Beschreibung: LogBot v2026.02.11.18.30.00 - Agents API Endpoints
 # ==============================================================================
 
-from typing import Optional
+import secrets
+from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
-from ..models import Agent, Log, User
-from ..schemas import AgentResponse, AgentListResponse
+from ..models import Agent, AgentToken, Log, User
+from ..schemas import AgentResponse, AgentListResponse, AgentTokenCreate, AgentTokenResponse
 from ..auth import get_current_user
 
 router = APIRouter(prefix="/api/agents", tags=["Agents"])
@@ -63,4 +64,43 @@ async def delete_agent(agent_id: int, db: AsyncSession = Depends(get_db), _=Depe
     if not agent:
         raise HTTPException(status_code=404, detail="Agent nicht gefunden")
     await db.delete(agent)
+    await db.commit()
+
+# ==============================================================================
+# Agent Token CRUD
+# ==============================================================================
+
+token_router = APIRouter(prefix="/api/agent-tokens", tags=["Agent Tokens"])
+
+@token_router.get("", response_model=List[AgentTokenResponse])
+async def list_agent_tokens(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
+    result = await db.execute(select(AgentToken).order_by(AgentToken.created_at.desc()))
+    return result.scalars().all()
+
+@token_router.post("", response_model=AgentTokenResponse, status_code=201)
+async def create_agent_token(data: AgentTokenCreate, db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
+    token = AgentToken(name=data.name, token=secrets.token_hex(32))
+    db.add(token)
+    await db.commit()
+    await db.refresh(token)
+    return token
+
+@token_router.post("/{token_id}/regenerate", response_model=AgentTokenResponse)
+async def regenerate_agent_token(token_id: int, db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
+    result = await db.execute(select(AgentToken).where(AgentToken.id == token_id))
+    token = result.scalar_one_or_none()
+    if not token:
+        raise HTTPException(status_code=404, detail="Token nicht gefunden")
+    token.token = secrets.token_hex(32)
+    await db.commit()
+    await db.refresh(token)
+    return token
+
+@token_router.delete("/{token_id}", status_code=204)
+async def delete_agent_token(token_id: int, db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
+    result = await db.execute(select(AgentToken).where(AgentToken.id == token_id))
+    token = result.scalar_one_or_none()
+    if not token:
+        raise HTTPException(status_code=404, detail="Token nicht gefunden")
+    await db.delete(token)
     await db.commit()

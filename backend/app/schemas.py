@@ -1,8 +1,8 @@
 # ==============================================================================
 # Name:        Philipp Fischer
 # Kontakt:     p.fischer@itconex.de
-# Version:     2026.01.30.13.30.00
-# Beschreibung: LogBot v2026.01.30.13.30.00 - Pydantic Schemas
+# Version:     2026.02.11.18.30.00
+# Beschreibung: LogBot v2026.02.11.18.30.00 - Pydantic Schemas
 # ==============================================================================
 
 from datetime import datetime
@@ -124,6 +124,34 @@ class WebhookResponse(WebhookBase):
     updated_at: datetime
     class Config:
         from_attributes = True
+
+# Agent Token
+class AgentTokenCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+
+class AgentTokenResponse(BaseModel):
+    id: int
+    name: str
+    token: str
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
+# Log Ingest (von authentifizierten Agents)
+class LogIngestEntry(BaseModel):
+    level: str = Field(default="info")
+    source: str = Field(default="unknown")
+    message: str
+
+class LogIngestRequest(BaseModel):
+    hostname: str
+    events: List[LogIngestEntry] = Field(..., max_length=50)
+
+class LogIngestResponse(BaseModel):
+    accepted: int
+    message: str = "ok"
 
 # Settings
 class SettingsResponse(BaseModel):

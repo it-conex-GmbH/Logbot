@@ -1,8 +1,8 @@
 -- ==============================================================================
 -- Name:        Philipp Fischer
 -- Kontakt:     p.fischer@itconex.de
--- Version:     2026.01.30.13.30.00
--- Beschreibung: LogBot v2026.01.30.13.30.00 - PostgreSQL Datenbankschema
+-- Version:     2026.02.11.18.30.00
+-- Beschreibung: LogBot v2026.02.11.18.30.00 - PostgreSQL Datenbankschema
 -- ==============================================================================
 
 -- Benutzer-Tabelle
@@ -83,6 +83,16 @@ CREATE TABLE IF NOT EXISTS settings (
 INSERT INTO users (username, email, password_hash, role) 
 VALUES ('admin', 'admin@localhost', '$2b$12$XOE63DtzGEyiaLLBY05W0ulT6EVFIC243bkg7UivW1kfx0.bmmSj2', 'admin')
 ON CONFLICT (username) DO NOTHING;
+
+-- Agent-Tokens für authentifizierten HTTPS-Modus
+CREATE TABLE IF NOT EXISTS agent_tokens (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    token VARCHAR(64) UNIQUE NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Standard-Einstellungen
 INSERT INTO settings (key, value, description) VALUES
