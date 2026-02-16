@@ -1,4 +1,4 @@
-# LogBot v2026.01.30.13.30.00
+# LogBot v2026.02.16.12.00.00
 **Zentraler Log-Server für Linux/Windows Systeme und Netzwerkgeräte**
 
 Entwickelt von Philipp Fischer  
@@ -36,8 +36,8 @@ sudo bash install.sh
 **Oder manuell:**
 
 ```bash
-tar -xzf logbot-v2026.01.30.13.30.00.tar.gz
-cd logbot-v2026.01.30.13.30.00
+tar -xzf logbot-v2026.02.16.12.00.00.tar.gz
+cd logbot-v2026.02.16.12.00.00
 sudo bash install.sh
 ```
 

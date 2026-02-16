@@ -4,7 +4,7 @@
     <aside class="w-64 flex flex-col" :style="{ backgroundColor: 'var(--color-surface, #1f2937)', color: 'var(--color-text-primary, #fff)' }">
       <div class="p-4 border-b" :style="{ borderColor: 'var(--color-border, #374151)' }">
         <h1 class="text-xl font-bold">📋 {{ companyName }}</h1>
-        <p class="text-sm" :style="{ color: 'var(--color-text-muted, #9ca3af)' }">v2026.01.30.13.30.00</p>
+        <p class="text-sm" :style="{ color: 'var(--color-text-muted, #9ca3af)' }">v2026.02.16.12.00.00</p>
       </div>
       
       <nav class="flex-1 p-4">

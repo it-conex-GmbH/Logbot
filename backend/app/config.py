@@ -1,8 +1,8 @@
 # ==============================================================================
 # Name:        Philipp Fischer
 # Kontakt:     p.fischer@itconex.de
-# Version:     2026.01.30.13.30.00
-# Beschreibung: LogBot v2026.01.30.13.30.00 - Backend Konfiguration
+# Version:     2026.02.16.12.00.00
+# Beschreibung: LogBot v2026.02.16.12.00.00 - Backend Konfiguration
 # ==============================================================================
 
 from pydantic_settings import BaseSettings
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440
-    app_version: str = "2026.01.30.13.30.00"
+    app_version: str = "2026.02.16.12.00.00"
     
     @property
     def database_url(self) -> str:
