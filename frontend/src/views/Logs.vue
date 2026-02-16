@@ -12,14 +12,30 @@
     <!-- Filter -->
     <div class="rounded-lg shadow p-4 mb-6" :style="cardStyle">
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <select v-model="filters.hostname" class="rounded px-3 py-2" :style="inputStyle" @change="applyFilters">
-          <option value="">Alle Hosts</option>
-          <option v-for="h in filterOptions.hostnames" :key="h" :value="h">{{ h }}</option>
-        </select>
-        <select v-model="filters.source" class="rounded px-3 py-2" :style="inputStyle" @change="applyFilters">
-          <option value="">Alle Sources</option>
-          <option v-for="s in filterOptions.sources" :key="s" :value="s">{{ s }}</option>
-        </select>
+        <input
+          v-model="filters.hostname"
+          type="text"
+          list="hostname-options"
+          placeholder="Alle Hosts..."
+          class="rounded px-3 py-2"
+          :style="inputStyle"
+          @keyup.enter="applyFilters"
+        >
+        <datalist id="hostname-options">
+          <option v-for="h in filterOptions.hostnames" :key="h" :value="h" />
+        </datalist>
+        <input
+          v-model="filters.source"
+          type="text"
+          list="source-options"
+          placeholder="Alle Sources..."
+          class="rounded px-3 py-2"
+          :style="inputStyle"
+          @keyup.enter="applyFilters"
+        >
+        <datalist id="source-options">
+          <option v-for="s in filterOptions.sources" :key="s" :value="s" />
+        </datalist>
         <select v-model="filters.level" class="rounded px-3 py-2" :style="inputStyle" @change="applyFilters">
           <option value="">Alle Level</option>
           <option v-for="l in filterOptions.levels" :key="l" :value="l">{{ l }}</option>
