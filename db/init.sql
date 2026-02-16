@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS idx_logs_agent_id ON logs(agent_id);
 CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON logs(timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_logs_hostname ON logs(hostname);
 CREATE INDEX IF NOT EXISTS idx_logs_level ON logs(level);
