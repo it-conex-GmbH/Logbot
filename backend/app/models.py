@@ -32,7 +32,7 @@ class Agent(Base):
     first_seen = Column(DateTime, default=datetime.utcnow)
     extra_data = Column(JSON, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow)
-    logs = relationship("Log", back_populates="agent")
+    logs = relationship("Log", back_populates="agent", passive_deletes=True)
 
 class Log(Base):
     __tablename__ = "logs"
