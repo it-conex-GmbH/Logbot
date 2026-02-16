@@ -12,32 +12,17 @@
     <!-- Filter -->
     <div class="rounded-lg shadow p-4 mb-6" :style="cardStyle">
       <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <input
-          v-model="filters.hostname"
-          type="text"
-          placeholder="Hostname..."
-          class="rounded px-3 py-2"
-          :style="inputStyle"
-          @keyup.enter="loadLogs"
-        >
-        <input
-          v-model="filters.source"
-          type="text"
-          placeholder="Source..."
-          class="rounded px-3 py-2"
-          :style="inputStyle"
-          @keyup.enter="loadLogs"
-        >
-        <select v-model="filters.level" class="rounded px-3 py-2" :style="inputStyle">
+        <select v-model="filters.hostname" class="rounded px-3 py-2" :style="inputStyle" @change="applyFilters">
+          <option value="">Alle Hosts</option>
+          <option v-for="h in filterOptions.hostnames" :key="h" :value="h">{{ h }}</option>
+        </select>
+        <select v-model="filters.source" class="rounded px-3 py-2" :style="inputStyle" @change="applyFilters">
+          <option value="">Alle Sources</option>
+          <option v-for="s in filterOptions.sources" :key="s" :value="s">{{ s }}</option>
+        </select>
+        <select v-model="filters.level" class="rounded px-3 py-2" :style="inputStyle" @change="applyFilters">
           <option value="">Alle Level</option>
-          <option value="emergency">Emergency</option>
-          <option value="alert">Alert</option>
-          <option value="critical">Critical</option>
-          <option value="error">Error</option>
-          <option value="warning">Warning</option>
-          <option value="notice">Notice</option>
-          <option value="info">Info</option>
-          <option value="debug">Debug</option>
+          <option v-for="l in filterOptions.levels" :key="l" :value="l">{{ l }}</option>
         </select>
         <input
           v-model="filters.search"
@@ -45,10 +30,10 @@
           placeholder="Suche in Nachricht..."
           class="rounded px-3 py-2"
           :style="inputStyle"
-          @keyup.enter="loadLogs"
+          @keyup.enter="applyFilters"
         >
         <button
-          @click="loadLogs"
+          @click="applyFilters"
           class="text-white rounded px-4 py-2 hover:opacity-90"
           :style="{ backgroundColor: 'var(--color-primary)' }"
         >
@@ -223,6 +208,12 @@ const filters = ref({
   search: ''
 })
 
+const filterOptions = ref({
+  hostnames: [],
+  sources: [],
+  levels: []
+})
+
 // Computed Styles
 const cardStyle = computed(() => ({
   backgroundColor: 'var(--color-surface)',
@@ -247,7 +238,24 @@ const codeBlockStyle = computed(() => ({
   color: 'var(--color-text-primary)'
 }))
 
-onMounted(() => loadLogs())
+onMounted(() => {
+  loadFilterOptions()
+  loadLogs()
+})
+
+async function loadFilterOptions() {
+  try {
+    const data = await authStore.api('/api/logs/filter-options')
+    filterOptions.value = data
+  } catch (e) {
+    console.error('Filter-Optionen laden fehlgeschlagen:', e)
+  }
+}
+
+function applyFilters() {
+  page.value = 1
+  loadLogs()
+}
 
 async function loadLogs() {
   loading.value = true

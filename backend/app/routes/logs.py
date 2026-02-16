@@ -71,6 +71,20 @@ async def list_logs(
     
     return LogListResponse(items=result.scalars().all(), total=total, page=page, page_size=page_size)
 
+@router.get("/filter-options")
+async def get_filter_options(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
+    """Gibt die eindeutigen Werte für Hostname, Source und Level zurück (für Dropdown-Filter)."""
+    hostnames = (await db.execute(
+        select(Log.hostname).where(Log.hostname.isnot(None)).distinct().order_by(Log.hostname)
+    )).scalars().all()
+    sources = (await db.execute(
+        select(Log.source).where(Log.source.isnot(None)).distinct().order_by(Log.source)
+    )).scalars().all()
+    levels = (await db.execute(
+        select(Log.level).where(Log.level.isnot(None)).distinct().order_by(Log.level)
+    )).scalars().all()
+    return {"hostnames": hostnames, "sources": sources, "levels": levels}
+
 @router.get("/recent", response_model=List[LogResponse])
 async def get_recent_logs(limit: int = Query(10, ge=1, le=100), db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
     result = await db.execute(select(Log).order_by(desc(Log.timestamp)).limit(limit))
