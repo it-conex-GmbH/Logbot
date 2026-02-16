@@ -9,7 +9,7 @@ import time
 from datetime import datetime, timedelta
 import psutil
 from fastapi import APIRouter, Depends
-from sqlalchemy import select, func
+from sqlalchemy import select, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..database import get_db
@@ -29,7 +29,9 @@ async def health_detailed(db: AsyncSession = Depends(get_db), _=Depends(get_curr
     db_ok = True
     logs_total = logs_24h = agents_total = agents_online = 0
     try:
-        logs_total = (await db.execute(select(func.count(Log.id)))).scalar() or 0
+        logs_total = (await db.execute(text(
+            "SELECT GREATEST(reltuples::bigint, 0) FROM pg_class WHERE relname = 'logs'"
+        ))).scalar() or 0
         yesterday = datetime.utcnow() - timedelta(hours=24)
         logs_24h = (await db.execute(select(func.count(Log.id)).where(Log.timestamp >= yesterday))).scalar() or 0
         agents_total = (await db.execute(select(func.count(Agent.id)))).scalar() or 0
