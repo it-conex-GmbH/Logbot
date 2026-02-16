@@ -51,7 +51,13 @@
             <p class="font-medium">{{ auth.user?.username }}</p>
             <p class="text-sm" :style="{ color: 'var(--color-text-muted, #9ca3af)' }">{{ auth.user?.role }}</p>
           </div>
-          <button @click="handleLogout" class="hover:text-white" :style="{ color: 'var(--color-text-muted, #9ca3af)' }" title="Abmelden">🚪</button>
+          <button @click="handleLogout" class="logout-btn" title="Abmelden">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
         </div>
       </div>
     </aside>
@@ -121,6 +127,25 @@ function handleLogout() {
 }
 
 .theme-toggle-btn svg {
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.logout-btn {
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  background-color: var(--color-surface-elevated, #374151);
+  color: var(--color-text-secondary, #d1d5db);
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #ef4444;
+  color: white;
+}
+
+.logout-btn svg {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
