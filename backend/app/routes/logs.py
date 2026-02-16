@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
-from ..models import Log, User
+from ..models import Log, Agent, User
 from ..schemas import LogResponse, LogDetailResponse, LogListResponse, LogStatsResponse
 from ..auth import get_current_user
 
@@ -65,14 +65,19 @@ async def get_recent_logs(limit: int = Query(10, ge=1, le=100), db: AsyncSession
 
 @router.get("/stats", response_model=LogStatsResponse)
 async def get_log_stats(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
-    total = (await db.execute(select(func.count(Log.id)))).scalar() or 0
     today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Nur Logs ab heute zählen für Level/Source Statistiken (nutzt timestamp-Index)
     today_count = (await db.execute(select(func.count(Log.id)).where(Log.timestamp >= today))).scalar() or 0
-    
-    by_level = dict((await db.execute(select(Log.level, func.count(Log.id)).group_by(Log.level))).all())
-    by_source = dict((await db.execute(select(Log.source, func.count(Log.id)).group_by(Log.source).order_by(desc(func.count(Log.id))).limit(10))).all())
-    unique = (await db.execute(select(func.count(func.distinct(Log.hostname))))).scalar() or 0
-    
+    by_level = dict((await db.execute(select(Log.level, func.count(Log.id)).where(Log.timestamp >= today).group_by(Log.level))).all())
+    by_source = dict((await db.execute(select(Log.source, func.count(Log.id)).where(Log.timestamp >= today).group_by(Log.source).order_by(desc(func.count(Log.id))).limit(10))).all())
+
+    # Gesamtzahl über pg_stat (Schätzung, aber sofort, kein Full-Scan)
+    total = (await db.execute(select(func.count(Log.id)))).scalar() or 0
+
+    # Unique Hosts aus agents-Tabelle (7 Zeilen statt 41k+ Logs scannen)
+    unique = (await db.execute(select(func.count(Agent.id)))).scalar() or 0
+
     return LogStatsResponse(total_logs=total, logs_today=today_count, logs_by_level=by_level, logs_by_source=by_source, unique_hosts=unique)
 
 @router.get("/{log_id}", response_model=LogDetailResponse)
