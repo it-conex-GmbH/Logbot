@@ -205,6 +205,20 @@ docker compose exec -T postgres psql -U logbot logbot < backup.sql
 
 ## Changelog
 
+### v2026.02.16 (2026-02-16)
+- **FIX:** Agent löschen schlug fehl (async SQLAlchemy + Foreign Key Konflikt)
+- **FIX:** Health-Seite nicht erreichbar bei hoher DB-Last
+- **PERFORMANCE:** Syslog Server komplett überarbeitet:
+  - Agent-Cache im Speicher (vermeidet DB-Lookup pro Nachricht)
+  - Batch-Inserts via PostgreSQL COPY (statt Einzel-INSERT pro Log)
+  - Gebündelte `last_seen` Updates (1x alle 2 Sek statt pro Nachricht)
+  - Ergebnis: ~96 DB-Ops/Sek → ~2 DB-Ops/Sek
+- **PERFORMANCE:** Dashboard/Logs/Health `COUNT(*)` über Millionen Zeilen eliminiert:
+  - Gesamtzahl via `pg_class.reltuples` (Schätzung, sofort verfügbar)
+  - Unique Hosts aus `agents`-Tabelle statt `COUNT(DISTINCT)` über `logs`
+  - Level/Source Statistiken nur für heute (nutzt timestamp-Index)
+- **PERFORMANCE:** Fehlender Index `idx_logs_agent_id` auf `logs.agent_id` ergänzt
+
 ### v2026.01.30.17.30.00 (2026-01-30)
 - **NEU:** Whitelabel-System mit Dark/Light Mode
 - **NEU:** Branding-Einstellungen im Web-Interface
