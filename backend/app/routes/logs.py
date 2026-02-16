@@ -5,6 +5,7 @@
 # Beschreibung: LogBot v2026.02.16.12.00.00 - Logs API Endpoints
 # ==============================================================================
 
+import logging
 from datetime import datetime
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -15,28 +16,16 @@ from ..models import Log, Agent, User
 from ..schemas import LogResponse, LogDetailResponse, LogListResponse, LogStatsResponse
 from ..auth import get_current_user
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/logs", tags=["Logs"])
 
-@router.get("", response_model=LogListResponse)
-async def list_logs(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(100, ge=1, le=1000),
-    hostname: Optional[str] = None,
-    level: Optional[str] = None,
-    source: Optional[str] = None,
-    search: Optional[str] = None,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_user)
-):
-    query = select(Log)
-    has_filters = any([hostname, level, source, search, start_date, end_date])
 
+def _apply_filters(query, hostname, level, source, search, start_date, end_date):
+    """Filter-Bedingungen auf eine Query anwenden."""
     if hostname:
         query = query.where(Log.hostname.ilike(f"%{hostname}%"))
     if level:
-        query = query.where(Log.level == level)
+        query = query.where(func.lower(Log.level) == level.lower())
     if source:
         query = query.where(Log.source.ilike(f"%{source}%"))
     if search:
@@ -45,38 +34,55 @@ async def list_logs(
         query = query.where(Log.timestamp >= start_date)
     if end_date:
         query = query.where(Log.timestamp <= end_date)
+    return query
+
+
+@router.get("", response_model=LogListResponse)
+async def list_logs(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(100, ge=1, le=1000),
+    hostname: Optional[str] = Query(None),
+    level: Optional[str] = Query(None),
+    source: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    _=Depends(get_current_user)
+):
+    logger.info(f"Log-Filter: hostname={hostname}, level={level}, source={source}, search={search}, page={page}")
+
+    query = select(Log)
+    has_filters = any([hostname, level, source, search, start_date, end_date])
+    query = _apply_filters(query, hostname, level, source, search, start_date, end_date)
 
     # Bei Filtern exakten Count, ohne Filter Schätzung aus pg_class
     if has_filters:
-        count_query = select(func.count(Log.id))
-        if hostname:
-            count_query = count_query.where(Log.hostname.ilike(f"%{hostname}%"))
-        if level:
-            count_query = count_query.where(Log.level == level)
-        if source:
-            count_query = count_query.where(Log.source.ilike(f"%{source}%"))
-        if search:
-            count_query = count_query.where(Log.message.ilike(f"%{search}%"))
-        if start_date:
-            count_query = count_query.where(Log.timestamp >= start_date)
-        if end_date:
-            count_query = count_query.where(Log.timestamp <= end_date)
+        count_query = _apply_filters(
+            select(func.count(Log.id)), hostname, level, source, search, start_date, end_date
+        )
         total = (await db.execute(count_query)).scalar() or 0
     else:
         total = (await db.execute(text(
             "SELECT GREATEST(reltuples::bigint, 0) FROM pg_class WHERE relname = 'logs'"
         ))).scalar() or 0
+
+    logger.info(f"Log-Filter Ergebnis: {total} Treffer")
+
     offset = (page - 1) * page_size
     result = await db.execute(query.order_by(desc(Log.timestamp)).offset(offset).limit(page_size))
-    
+
     return LogListResponse(items=result.scalars().all(), total=total, page=page, page_size=page_size)
 
 @router.get("/filter-options")
 async def get_filter_options(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
-    """Gibt die eindeutigen Werte für Hostname, Source und Level zurück (für Dropdown-Filter)."""
+    """Gibt die eindeutigen Werte für Hostname, Source und Level zurück (für Dropdown-Filter).
+    Nutzt agents-Tabelle für Hostnames (wenige Zeilen statt 8M+ Logs zu scannen)."""
+    # Hostnames aus agents-Tabelle (7 Zeilen statt DISTINCT über 8M Logs)
     hostnames = (await db.execute(
-        select(Log.hostname).where(Log.hostname.isnot(None)).distinct().order_by(Log.hostname)
+        select(Agent.hostname).where(Agent.hostname.isnot(None)).distinct().order_by(Agent.hostname)
     )).scalars().all()
+    # Source/Level: DISTINCT nur über indizierte Spalten, schnell genug
     sources = (await db.execute(
         select(Log.source).where(Log.source.isnot(None)).distinct().order_by(Log.source)
     )).scalars().all()

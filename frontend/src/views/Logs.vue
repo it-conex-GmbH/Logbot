@@ -58,6 +58,11 @@
       </div>
     </div>
     
+    <!-- Fehlermeldung -->
+    <div v-if="error" class="rounded-lg shadow p-4 mb-6 bg-red-100 border border-red-400 text-red-700">
+      {{ error }}
+    </div>
+
     <!-- Logs Tabelle -->
     <div class="rounded-lg shadow" :style="cardStyle">
       <div class="p-4 border-b flex justify-between items-center" :style="{ borderColor: 'var(--color-border)' }">
@@ -216,6 +221,7 @@ const page = ref(1)
 const pageSize = 100
 const loading = ref(false)
 const selectedLog = ref(null)
+const error = ref('')
 
 const filters = ref({
   hostname: '',
@@ -275,6 +281,7 @@ function applyFilters() {
 
 async function loadLogs() {
   loading.value = true
+  error.value = ''
   try {
     const params = new URLSearchParams({
       page: page.value,
@@ -284,12 +291,15 @@ async function loadLogs() {
     if (filters.value.source) params.append('source', filters.value.source)
     if (filters.value.level) params.append('level', filters.value.level)
     if (filters.value.search) params.append('search', filters.value.search)
-    
+
+    console.log('Log-Filter Request:', `/api/logs?${params}`)
     const data = await authStore.api(`/api/logs?${params}`)
+    console.log('Log-Filter Response:', data.total, 'Treffer, Seite', data.page)
     logs.value = data.items
     total.value = data.total
   } catch (e) {
     console.error('Fehler:', e)
+    error.value = `Fehler beim Laden: ${e.message}`
   } finally {
     loading.value = false
   }
