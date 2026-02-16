@@ -5,7 +5,15 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(docker.exe compose:*)",
+      "Bash(where.exe:*)",
+      "Bash(cmd.exe /c \"where docker\")",
+      "Bash(cmd.exe /c \"docker compose -f D:\\\\Github\\\\PFischer6\\\\logbot\\\\Logbot\\\\docker-compose.yml ps\")",
+      "Bash(npx vite build)",
+      "Bash(cmd.exe /c \"cd /d D:\\\\Github\\\\PFischer6\\\\logbot\\\\Logbot\\\\frontend && npm run build\")",
+      "Bash(cmd.exe /c \"where node && where npm\")",
+      "Bash(powershell.exe -Command \"where.exe node; where.exe npm\")"
     ]
   }
 }
