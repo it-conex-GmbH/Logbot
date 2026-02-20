@@ -2,8 +2,8 @@
 ==============================================================================
 Name:        Philipp Fischer
 Kontakt:     p.fischer@itconex.de
-Version:     2026.02.11.18.30.00
-Beschreibung: LogBot Agent v2026.02.11.18.30.00 - Windows Installer
+Version:     2026.02.20.19.00.09
+Beschreibung: LogBot Agent v2026.02.20.19.00.09 - Windows Installer
               Start per Menue: 1=Install/Update, 2=Tests senden,
               3=Vollstaendig deinstallieren (Task + Daten, PS1 bleibt)
               Modi: UDP Syslog (klassisch) oder HTTPS (verschluesselt + auth)
@@ -24,7 +24,7 @@ $ErrorActionPreference = "Stop"
 $INSTALL_DIR = "$env:ProgramData\LogBot-Agent"
 $SCRIPT_NAME = "LogBotAgent.ps1"
 $TASK_NAME = "LogBotAgent"
-$AGENT_VERSION = "2026.02.11.18.30.00"
+$AGENT_VERSION = "2026.02.20.19.00.09"
 
 # ==============================================================================
 # Hilfsfunktionen
@@ -665,34 +665,90 @@ function Stop-AgentProcesses {
     }
 }
 
+function Remove-ScheduledTaskForce {
+    Write-LogInfo "Entferne Scheduled Task..."
+
+    # Versuche regulär über ScheduledTasks-Modul
+    $task = Get-ScheduledTask -TaskName $TASK_NAME -ErrorAction SilentlyContinue
+    if ($task) {
+        try { Disable-ScheduledTask -TaskName $TASK_NAME -ErrorAction SilentlyContinue | Out-Null } catch {}
+        try { Stop-ScheduledTask -TaskName $TASK_NAME -ErrorAction SilentlyContinue } catch {}
+        try {
+            Unregister-ScheduledTask -TaskName $TASK_NAME -Confirm:$false
+            Write-LogInfo "Scheduled Task entfernt (Unregister-ScheduledTask)"
+        } catch {
+            Write-LogWarn "Unregister-ScheduledTask fehlgeschlagen: $_"
+        }
+    } else {
+        Write-LogInfo "Kein Scheduled Task gefunden (Get-ScheduledTask)"
+    }
+
+    # Fallback via schtasks (deckt evtl. Ghost-Eintraege ab)
+    foreach ($tn in @($TASK_NAME, "\$TASK_NAME")) {
+        try {
+            schtasks.exe /Delete /TN $tn /F 2>$null | Out-Null
+        } catch {}
+    }
+}
+
 function Uninstall-Agent {
     Write-LogInfo "Deinstalliere LogBot Agent..."
 
-    $Task = Get-ScheduledTask -TaskName $TASK_NAME -ErrorAction SilentlyContinue
-    if ($Task) {
-        if ($Task.State -eq "Running") {
-            Stop-ScheduledTask -TaskName $TASK_NAME
-        }
-        Unregister-ScheduledTask -TaskName $TASK_NAME -Confirm:$false
-        Write-LogInfo "Scheduled Task entfernt"
-    } else {
-        Write-LogInfo "Kein Scheduled Task gefunden"
-    }
+    $taskFile = Join-Path $env:SystemRoot "System32\\Tasks\\$TASK_NAME"
+    $errors = @()
 
+    # Laufende Agent-Instanzen beenden (vor Filesystem-Delete)
     Stop-AgentProcesses
 
-    if (Test-Path $INSTALL_DIR) {
+    Remove-ScheduledTaskForce
+
+    # Falls Task-Datei liegen bleibt, manuell loeschen
+    if (Test-Path $taskFile) {
         try {
-            Remove-Item -Path $INSTALL_DIR -Recurse -Force
-            Write-LogInfo "Installationsverzeichnis entfernt"
+            Remove-Item -Path $taskFile -Force
+            Write-LogInfo "Task-Datei aus Aufgabenplaner entfernt"
         } catch {
-            Write-LogWarn "Konnte Installationsverzeichnis nicht entfernen: $_"
+            Write-LogWarn "Konnte Task-Datei nicht entfernen: $_"
+            $errors += "Task-Datei"
         }
-    } else {
-        Write-LogInfo "Installationsverzeichnis nicht vorhanden"
     }
 
-    Write-LogSuccess "LogBot Agent deinstalliert"
+    # Mehrere moegliche Installationspfade (Altlasten)
+    $installPaths = @(
+        $INSTALL_DIR,
+        "$env:ProgramData\\LogBotAgent",
+        "$env:ProgramFiles\\LogBot-Agent",
+        "$env:ProgramFiles(x86)\\LogBot-Agent"
+    ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -Unique
+
+    if ($installPaths.Count -eq 0) {
+        Write-LogInfo "Keine Installationsverzeichnisse gefunden"
+    }
+
+    foreach ($path in $installPaths) {
+        try {
+            Remove-Item -Path $path -Recurse -Force
+            Write-LogInfo "Verzeichnis entfernt: $path"
+        } catch {
+            Write-LogWarn "Konnte Verzeichnis nicht entfernen: $path - $_"
+            $errors += "Verzeichnis $path"
+        }
+    }
+
+    # Abschlusspruefung
+    $stillTask = Get-ScheduledTask -TaskName $TASK_NAME -ErrorAction SilentlyContinue
+    $stillFiles = Test-Path $INSTALL_DIR
+    $stillTaskFile = Test-Path $taskFile
+
+    if ($stillTask -or $stillFiles -or $stillTaskFile -or $errors.Count -gt 0) {
+        Write-LogWarn "Deinstallation unvollstaendig. Offene Reste: $($errors -join ', ')"
+        if ($stillTask) { Write-LogWarn "Aufgabenplaner-Eintrag existiert noch." }
+        if ($stillTaskFile) { Write-LogWarn "Task-Datei unter $taskFile existiert noch." }
+        if ($stillFiles) { Write-LogWarn "Verzeichnis $INSTALL_DIR existiert noch." }
+        return
+    }
+
+    Write-LogSuccess "LogBot Agent vollstaendig deinstalliert"
 }
 
 # ==============================================================================
