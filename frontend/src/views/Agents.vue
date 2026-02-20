@@ -1,13 +1,13 @@
-<!-- ==============================================================================
+﻿<!-- ==============================================================================
      Name:        Philipp Fischer
      Kontakt:     p.fischer@itconex.de
      Version:     2026.01.30.19.05.33
-     Beschreibung: LogBot - Agents/Geräte Übersicht mit Theme-Support
+     Beschreibung: LogBot - Agents/GerÃ¤te Ãœbersicht mit Theme-Support
      ============================================================================== -->
 
 <template>
   <div class="p-6">
-    <h1 class="text-2xl font-bold mb-6" :style="{ color: 'var(--color-text-primary)' }">Agents / Geräte</h1>
+    <h1 class="text-2xl font-bold mb-6" :style="{ color: 'var(--color-text-primary)' }">Agents / GerÃ¤te</h1>
     
     <!-- Suche -->
     <div class="rounded-lg shadow p-4 mb-6" :style="cardStyle">
@@ -25,6 +25,8 @@
           <option value="unifi_ap">UniFi AP</option>
           <option value="linux">Linux</option>
           <option value="windows">Windows</option>
+          <option value="syslog">Syslog</option>
+          <option value="windows_agent">Windows-Agent</option>
           <option value="unknown">Unbekannt</option>
         </select>
         <button
@@ -61,7 +63,7 @@
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
             <span :style="{ color: 'var(--color-text-muted)' }">Typ:</span>
-            <span :style="{ color: 'var(--color-text-primary)' }">{{ agent.device_type }}</span>
+            <span :style="{ color: 'var(--color-text-primary)' }">{{ typeLabel(agent.device_type) }}</span>
           </div>
           <div v-if="agent.mac_address" class="flex justify-between">
             <span :style="{ color: 'var(--color-text-muted)' }">MAC:</span>
@@ -95,14 +97,14 @@
             class="hover:underline text-sm"
             :style="{ color: 'var(--color-primary)' }"
           >
-            Logs anzeigen →
+            Logs anzeigen â†’
           </router-link>
           <button
             @click="deleteAgent(agent)"
             class="text-sm hover:opacity-70"
             :style="{ color: 'var(--color-danger)' }"
           >
-            Löschen
+            LÃ¶schen
           </button>
         </div>
       </div>
@@ -122,7 +124,7 @@
         class="px-4 py-2 rounded disabled:opacity-50"
         :style="buttonSecondaryStyle"
       >
-        ← Zurück
+        â† ZurÃ¼ck
       </button>
       <span class="px-4 py-2" :style="{ color: 'var(--color-text-secondary)' }">Seite {{ page }} von {{ Math.ceil(total / pageSize) }}</span>
       <button
@@ -131,7 +133,7 @@
         class="px-4 py-2 rounded disabled:opacity-50"
         :style="buttonSecondaryStyle"
       >
-        Weiter →
+        Weiter â†’
       </button>
     </div>
   </div>
@@ -208,7 +210,7 @@ async function loadAgents() {
 }
 
 async function deleteAgent(agent) {
-  if (!confirm(`Agent "${agent.hostname}" wirklich löschen?`)) return
+  if (!confirm(`Agent "${agent.hostname}" wirklich lÃ¶schen?`)) return
 
   try {
     await authStore.api(`/api/agents/${agent.id}`, { method: 'DELETE' })
@@ -218,12 +220,27 @@ async function deleteAgent(agent) {
   }
 }
 
+function typeLabel(t) {
+  const map = {
+    syslog: 'Syslog',
+    windows_agent: 'Windows-Agent',
+    unifi_ap: 'UniFi AP',
+    linux: 'Linux',
+    windows: 'Windows',
+    unknown: 'Unbekannt'
+  }
+  return map[t] || t || 'Unbekannt'
+}
+
 function isOnline(lastSeen) {
   if (!lastSeen) return false
   const timeoutMs = offlineTimeout.value * 1000
   const cutoff = Date.now() - timeoutMs
-  const timestamp = lastSeen.endsWith('Z') ? lastSeen : lastSeen + 'Z'
-  return new Date(timestamp).getTime() > cutoff
+  const hasTZ = /[zZ]|[+-]\d{2}:?\d{2}$/.test(lastSeen)
+  const ts = hasTZ ? lastSeen : `${lastSeen}Z`
+  const time = Date.parse(ts)
+  if (Number.isNaN(time)) return false
+  return time > cutoff
 }
 
 function formatTime(timestamp) {
@@ -231,3 +248,6 @@ function formatTime(timestamp) {
   return new Date(timestamp).toLocaleString('de-DE')
 }
 </script>
+
+
+

@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # ==============================================================================
 # Name:        Philipp Fischer
 # Kontakt:     p.fischer@itconex.de
 # Version:     2026.02.16.12.00.00
 # Beschreibung: LogBot v2026.02.16.12.00.00 - Syslog Server mit UniFi Parsing
-#               Empfängt Syslog auf UDP/TCP 514, parst verschiedene Formate
-#               Optimiert: Agent-Cache, Batch-Inserts, gebündelte last_seen Updates
+#               EmpfÃ¤ngt Syslog auf UDP/TCP 514, parst verschiedene Formate
+#               Optimiert: Agent-Cache, Batch-Inserts, gebÃ¼ndelte last_seen Updates
 # ==============================================================================
 
 import asyncio
@@ -86,7 +86,7 @@ class SyslogParser:
             'hostname': sender_ip,
             'ip_address': sender_ip,
             'mac_address': None,
-            'device_type': 'unknown',
+            'device_type': 'syslog',
             'facility': 1,
             'level': 'info',
             'source': 'unknown',
@@ -161,7 +161,7 @@ class DatabaseManager:
         self.pool = None
         # Agent-Cache: key -> (agent_id, timestamp)
         self._agent_cache = {}
-        # Batch-Buffer für Logs
+        # Batch-Buffer fÃ¼r Logs
         self._log_buffer = []
         self._buffer_lock = asyncio.Lock()
         # Set von Agent-IDs die ein last_seen Update brauchen
@@ -197,7 +197,7 @@ class DatabaseManager:
         key = self._cache_key(hostname, ip, mac)
         now = time.monotonic()
 
-        # Cache prüfen
+        # Cache prÃ¼fen
         cached = self._agent_cache.get(key)
         if cached and (now - cached[1]) < AGENT_CACHE_TTL:
             self._agents_to_update.add(cached[0])
@@ -231,7 +231,7 @@ class DatabaseManager:
         return agent_id
 
     async def queue_log(self, data: Dict[str, Any]):
-        """Log in den Buffer legen statt direkt einzufügen."""
+        """Log in den Buffer legen statt direkt einzufÃ¼gen."""
         agent_id = await self.get_or_create_agent(
             data['hostname'], data['ip_address'], data.get('mac_address'),
             data['device_type'], data.get('extra_data', {}))
@@ -265,7 +265,7 @@ class DatabaseManager:
             logger.error(f"Batch-Insert fehlgeschlagen ({len(rows)} Logs): {e}")
 
     async def _flush_agent_timestamps(self):
-        """Alle ausstehenden last_seen Updates gebündelt schreiben."""
+        """Alle ausstehenden last_seen Updates gebÃ¼ndelt schreiben."""
         if not self._agents_to_update:
             return
 
@@ -293,7 +293,7 @@ class DatabaseManager:
 
 
 class SyslogUDPProtocol(asyncio.DatagramProtocol):
-    """UDP Syslog Empfänger."""
+    """UDP Syslog EmpfÃ¤nger."""
 
     def __init__(self, parser: SyslogParser, db: DatabaseManager):
         self.parser = parser
@@ -357,7 +357,7 @@ async def main():
         lambda r, w: handle_tcp(r, w, parser, db),
         '0.0.0.0', SYSLOG_PORT)
 
-    logger.info(f"Syslog Server läuft auf UDP/TCP Port {SYSLOG_PORT}")
+    logger.info(f"Syslog Server lÃ¤uft auf UDP/TCP Port {SYSLOG_PORT}")
     logger.info(f"Batch-Modus: {BATCH_SIZE} Logs oder alle {BATCH_INTERVAL}s")
 
     try:
@@ -370,3 +370,4 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
+
