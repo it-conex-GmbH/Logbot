@@ -14,9 +14,7 @@ Beschreibung: LogBot Agent v2026.02.11.18.30.00 - Windows Installer
 param(
     [string]$ServerFqdn = "",
     [string]$ServerIP = "",
-    [int]$ServerPort = 0,
-    [switch]$Uninstall,
-    [switch]$Test
+    [int]$ServerPort = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -647,6 +645,25 @@ function Send-TestMessage {
 # Deinstallation
 # ==============================================================================
 
+function Stop-AgentProcesses {
+    Write-LogInfo "Pruefe laufende Agent-Prozesse..."
+    try {
+        $processes = Get-CimInstance -ClassName Win32_Process -ErrorAction SilentlyContinue |
+            Where-Object { $_.CommandLine -and $_.CommandLine -match [regex]::Escape("$INSTALL_DIR\$SCRIPT_NAME") }
+
+        foreach ($proc in $processes) {
+            Write-LogInfo "Beende Prozess PID $($proc.ProcessId)"
+            Stop-Process -Id $proc.ProcessId -Force -ErrorAction SilentlyContinue
+        }
+
+        if (-not $processes) {
+            Write-LogInfo "Keine laufenden Agent-Prozesse gefunden"
+        }
+    } catch {
+        Write-LogWarn "Konnte Prozesse nicht ermitteln/stoppen: $_"
+    }
+}
+
 function Uninstall-Agent {
     Write-LogInfo "Deinstalliere LogBot Agent..."
 
@@ -657,11 +674,21 @@ function Uninstall-Agent {
         }
         Unregister-ScheduledTask -TaskName $TASK_NAME -Confirm:$false
         Write-LogInfo "Scheduled Task entfernt"
+    } else {
+        Write-LogInfo "Kein Scheduled Task gefunden"
     }
 
+    Stop-AgentProcesses
+
     if (Test-Path $INSTALL_DIR) {
-        Remove-Item -Path $INSTALL_DIR -Recurse -Force
-        Write-LogInfo "Dateien entfernt"
+        try {
+            Remove-Item -Path $INSTALL_DIR -Recurse -Force
+            Write-LogInfo "Installationsverzeichnis entfernt"
+        } catch {
+            Write-LogWarn "Konnte Installationsverzeichnis nicht entfernen: $_"
+        }
+    } else {
+        Write-LogInfo "Installationsverzeichnis nicht vorhanden"
     }
 
     Write-LogSuccess "LogBot Agent deinstalliert"
@@ -685,11 +712,32 @@ function Show-Summary {
     Write-Host "  Stop-ScheduledTask -TaskName $TASK_NAME       # Stoppen"
     Write-Host ""
     Write-Host "Test:"
-    Write-Host "  .\install-windows.ps1 -Test"
+    Write-Host "  Installer starten und Option 2 waehlen"
     Write-Host ""
     Write-Host "Deinstallation:"
-    Write-Host "  .\install-windows.ps1 -Uninstall"
+    Write-Host "  Installer starten und Option 3 waehlen"
     Write-Host ""
+}
+
+# ==============================================================================
+# Menue
+# ==============================================================================
+
+function Show-MainMenu {
+    Write-Host ""
+    Write-Host "Was moechtest du tun?"
+    Write-Host "  1) Installieren / Neu installieren"
+    Write-Host "  2) Testnachrichten senden (Installation erforderlich)"
+    Write-Host "  3) Vollstaendig deinstallieren (alles ausser diesem Script wird entfernt)"
+    Write-Host "  4) Abbrechen"
+    $choice = Read-Host "Auswahl [1]"
+
+    switch ($choice) {
+        "2" { return "test" }
+        "3" { return "uninstall" }
+        "4" { return "exit" }
+        default { return "install" }
+    }
 }
 
 # ==============================================================================
@@ -703,18 +751,17 @@ Write-Host "  (PowerShell Event Log Forwarder)" -ForegroundColor Cyan
 Write-Host "==============================================" -ForegroundColor Cyan
 Write-Host ""
 
-if ($Uninstall) {
-    Uninstall-Agent
-    exit 0
-}
+$Action = Show-MainMenu
 
-if ($Test) {
-    Send-TestMessage
-    exit 0
+switch ($Action) {
+    "uninstall" { Uninstall-Agent }
+    "test" { Send-TestMessage }
+    "install" {
+        Install-Agent
+        Install-ScheduledTask
+        Start-Agent
+        Send-TestMessage
+        Show-Summary
+    }
+    default { Write-LogInfo "Abgebrochen." }
 }
-
-Install-Agent
-Install-ScheduledTask
-Start-Agent
-Send-TestMessage
-Show-Summary
