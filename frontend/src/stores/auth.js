@@ -8,12 +8,26 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
   
+  async function parseError(res) {
+    try {
+      const data = await res.json()
+      if (data?.detail) return data.detail
+      return JSON.stringify(data)
+    } catch {
+      try {
+        return await res.text()
+      } catch {
+        return `HTTP ${res.status}`
+      }
+    }
+  }
+
   async function login(username, password) {
     const formData = new FormData()
     formData.append('username', username)
     formData.append('password', password)
     const res = await fetch('/api/auth/login', { method: 'POST', body: formData })
-    if (!res.ok) throw new Error((await res.json()).detail || 'Login fehlgeschlagen')
+    if (!res.ok) throw new Error(await parseError(res) || 'Login fehlgeschlagen')
     const data = await res.json()
     token.value = data.access_token
     localStorage.setItem('token', data.access_token)
@@ -39,7 +53,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
     const res = await fetch(url, { ...options, headers })
     if (res.status === 401) { logout(); window.location.href = '/login'; throw new Error('Sitzung abgelaufen') }
-    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || `HTTP ${res.status}`)
+    if (!res.ok) throw new Error(await parseError(res) || `HTTP ${res.status}`)
     if (res.status === 204) return null
     return res.json()
   }
