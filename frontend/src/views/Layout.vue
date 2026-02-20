@@ -1,17 +1,18 @@
-<template>
+﻿<template>
   <div class="flex h-screen" :style="{ backgroundColor: 'var(--color-bg, #f3f4f6)' }">
     <!-- Sidebar -->
     <aside class="w-64 flex flex-col" :style="{ backgroundColor: 'var(--color-surface, #1f2937)', color: 'var(--color-text-primary, #fff)' }">
       <div class="p-4 border-b" :style="{ borderColor: 'var(--color-border, #374151)' }">
-        <h1 class="text-xl font-bold">📋 {{ companyName }}</h1>
+        <h1 class="text-xl font-bold">ðŸ“‹ {{ companyName }}</h1>
         <p class="text-sm" :style="{ color: 'var(--color-text-muted, #9ca3af)' }">v2026.02.16.12.00.00</p>
       </div>
       
       <nav class="flex-1 p-4">
         <ul class="space-y-2">
           <li><router-link to="/" class="nav-link" :class="{ active: $route.name === 'Dashboard' }">📈 Dashboard</router-link></li>
-          <li><router-link to="/logs" class="nav-link" :class="{ active: $route.name === 'Logs' }">📋 Logs</router-link></li>
-          <li><router-link to="/agents" class="nav-link" :class="{ active: $route.name === 'Agents' }">🖥️ Agents</router-link></li>
+          <li><router-link to="/logs" class="nav-link" :class="{ active: $route.name === 'Logs' }">📃 Logs</router-link></li>
+          <li><router-link to="/agents" class="nav-link" :class="{ active: $route.name === 'Agents' }">🛡️ Agents</router-link></li>
+          <li><router-link to="/agent-tokens" class="nav-link" :class="{ active: $route.name === 'AgentTokens' }">🔑 Agent Token</router-link></li>
           <li><router-link to="/webhooks" class="nav-link" :class="{ active: $route.name === 'Webhooks' }">🔗 Webhooks</router-link></li>
           <li v-if="auth.isAdmin"><router-link to="/users" class="nav-link" :class="{ active: $route.name === 'Users' }">👥 Benutzer</router-link></li>
           <li><router-link to="/settings" class="nav-link" :class="{ active: $route.name === 'Settings' }">⚙️ Einstellungen</router-link></li>

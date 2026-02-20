@@ -57,6 +57,13 @@ const routes = [
         name: 'Agents', 
         component: () => import('../views/Agents.vue') 
       },
+
+      // Agent Tokens (HTTPS Agents)
+      { 
+        path: 'agent-tokens', 
+        name: 'AgentTokens', 
+        component: () => import('../views/AgentTokens.vue') 
+      },
       
       // Benutzer-Verwaltung
       { 

@@ -6,12 +6,13 @@
 # ==============================================================================
 
 from datetime import datetime
+import secrets
 from fastapi import FastAPI, HTTPException, Query, Header, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from .config import settings
-from .database import get_db
+from .database import get_db, async_session
 from .models import Webhook, Log, Agent, AgentToken
 from .schemas import LogResponse, LogDetailResponse, LogIngestRequest, LogIngestResponse
 from .routes import auth_router, health_router, users_router, agents_router, agent_tokens_router, logs_router, webhooks_router, settings_router
@@ -37,6 +38,21 @@ app.include_router(logs_router)
 app.include_router(webhooks_router)
 app.include_router(branding_router)
 app.include_router(settings_router)
+
+# Sicherstellen, dass mindestens ein Agent-Token existiert (fuer HTTPS-Agent-Installationen)
+@app.on_event("startup")
+async def ensure_default_agent_token():
+    async with async_session() as session:
+        existing = await session.execute(select(AgentToken.id))
+        if existing.scalar_one_or_none():
+            return
+        default_token = AgentToken(
+            name="default-windows-agent",
+            token=secrets.token_hex(32),
+            is_active=True,
+        )
+        session.add(default_token)
+        await session.commit()
 
 # Öffentlicher Webhook Endpoint - KEINE Auth!
 @app.get("/api/webhook/{webhook_id}/call", tags=["Webhooks"])
