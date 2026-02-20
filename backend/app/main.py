@@ -7,6 +7,7 @@
 
 from datetime import datetime
 import secrets
+import logging
 from fastapi import FastAPI, HTTPException, Query, Header, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, desc
@@ -42,17 +43,23 @@ app.include_router(settings_router)
 # Sicherstellen, dass mindestens ein Agent-Token existiert (fuer HTTPS-Agent-Installationen)
 @app.on_event("startup")
 async def ensure_default_agent_token():
-    async with async_session() as session:
-        existing = await session.execute(select(AgentToken.id))
-        if existing.scalar_one_or_none():
-            return
-        default_token = AgentToken(
-            name="default-windows-agent",
-            token=secrets.token_hex(32),
-            is_active=True,
-        )
-        session.add(default_token)
-        await session.commit()
+    logger = logging.getLogger("logbot.startup")
+    try:
+        async with async_session() as session:
+            existing = await session.execute(select(AgentToken.id))
+            if existing.scalar_one_or_none():
+                return
+            default_token = AgentToken(
+                name="default-windows-agent",
+                token=secrets.token_hex(32),
+                is_active=True,
+            )
+            session.add(default_token)
+            await session.commit()
+            logger.info("Default agent token created")
+    except Exception as exc:
+        # Nicht den gesamten Service kippen, falls DB noch nicht bereit ist
+        logger.warning("Default agent token init skipped: %s", exc)
 
 # Öffentlicher Webhook Endpoint - KEINE Auth!
 @app.get("/api/webhook/{webhook_id}/call", tags=["Webhooks"])
