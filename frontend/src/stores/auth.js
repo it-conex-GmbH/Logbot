@@ -1,3 +1,9 @@
+// ==============================================================================
+// Name:        Auth Store
+// Kontakt:     p.fischer@itconex.de
+// Version:     2026.02.20.12.00.00
+// Beschreibung: Pinia Store für Auth (Login, Token, API Wrapper)
+// ==============================================================================
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 

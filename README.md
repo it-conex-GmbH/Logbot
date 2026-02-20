@@ -1,4 +1,4 @@
-# LogBot v2026.02.16.12.00.00
+# LogBot v2026.02.20.12.00.00
 **Zentraler Log-Server für Linux/Windows Systeme und Netzwerkgeräte**
 
 Entwickelt von Philipp Fischer  
@@ -204,6 +204,11 @@ docker compose exec -T postgres psql -U logbot logbot < backup.sql
 ```
 
 ## Changelog
+
+### v2026.02.20 (2026-02-20)
+- **NEU:** Web-UI Seite „Agent Token“ zeigt/erneuert den HTTPS-Agent-Token und Kopierlink.
+- **NEU:** Backend erzeugt beim Start automatisch ein Default-Agent-Token (falls keins vorhanden).
+- **FIX:** Robustere Login-Fehlerbehandlung im Frontend (verhindert JSON-Parse-Fehler).
 
 ### v2026.02.16 (2026-02-16)
 - **FIX:** Agent löschen schlug fehl (async SQLAlchemy + Foreign Key Konflikt)
