@@ -236,10 +236,15 @@ function isOnline(lastSeen) {
   if (!lastSeen) return false
   const timeoutMs = offlineTimeout.value * 1000
   const cutoff = Date.now() - timeoutMs
-  const hasTZ = /[zZ]|[+-]\d{2}:?\d{2}$/.test(lastSeen)
-  const ts = hasTZ ? lastSeen : `${lastSeen}Z`
+
+  let ts = lastSeen.trim()
+  // SQLAlchemy liefert oft 'YYYY-MM-DD HH:MM:SS' (ohne 'T' / TZ)
+  if (ts.includes(' ')) ts = ts.replace(' ', 'T')
+  const hasTZ = /[zZ]|[+-]\d{2}:?\d{2}$/.test(ts)
+  if (!hasTZ) ts = `${ts}Z`
+
   const time = Date.parse(ts)
-  if (Number.isNaN(time)) return false
+  if (!Number.isFinite(time)) return false
   return time > cutoff
 }
 

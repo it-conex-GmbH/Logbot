@@ -197,29 +197,43 @@ class DatabaseManager:
         key = self._cache_key(hostname, ip, mac)
         now = time.monotonic()
 
-        # Cache prÃ¼fen
+        # Cache prüfen
         cached = self._agent_cache.get(key)
         if cached and (now - cached[1]) < AGENT_CACHE_TTL:
             self._agents_to_update.add(cached[0])
             return cached[0]
 
-        # DB abfragen
+        # DB abfragen / ggf. updaten
         async with self.pool.acquire() as conn:
-            agent_id = None
+            agent_row = None
             if mac:
-                row = await conn.fetchrow(
-                    "SELECT id FROM agents WHERE mac_address = $1", mac)
-                if row:
-                    agent_id = row['id']
+                agent_row = await conn.fetchrow(
+                    "SELECT id, device_type, mac_address FROM agents WHERE mac_address = $1", mac)
 
-            if not agent_id:
-                row = await conn.fetchrow(
-                    "SELECT id FROM agents WHERE hostname=$1 AND ip_address=$2",
+            if not agent_row:
+                agent_row = await conn.fetchrow(
+                    "SELECT id, device_type, mac_address FROM agents WHERE hostname=$1 AND ip_address=$2",
                     hostname, ip)
-                if row:
-                    agent_id = row['id']
 
-            if not agent_id:
+            if agent_row:
+                agent_id = agent_row['id']
+                updates = []
+                params = []
+
+                # Gerätetyp nachtragen, falls bisher unbekannt
+                if (agent_row['device_type'] in (None, 'unknown')) and device_type and device_type != 'unknown':
+                    updates.append(f"device_type = ${len(params) + 1}")
+                    params.append(device_type)
+
+                # MAC nachtragen, falls leer
+                if (not agent_row['mac_address']) and mac:
+                    updates.append(f"mac_address = ${len(params) + 1}")
+                    params.append(mac)
+
+                if updates:
+                    params.append(agent_id)
+                    await conn.execute(f"UPDATE agents SET {', '.join(updates)} WHERE id = ${len(params)}", *params)
+            else:
                 agent_id = await conn.fetchval(
                     """INSERT INTO agents (hostname, ip_address, mac_address, device_type, extra_data)
                        VALUES ($1, $2, $3, $4, $5::jsonb) RETURNING id""",

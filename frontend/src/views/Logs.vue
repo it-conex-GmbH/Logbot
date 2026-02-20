@@ -11,19 +11,24 @@
     
     <!-- Filter -->
     <div class="rounded-lg shadow p-4 mb-6" :style="cardStyle">
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <select
+          v-model="selectedHostname"
+          class="rounded px-3 py-2"
+          :style="inputStyle"
+          @change="applyFilters"
+        >
+          <option value="">Alle bekannten Hosts</option>
+          <option v-for="h in filterOptions.hostnames" :key="h" :value="h">{{ h }}</option>
+        </select>
         <input
           v-model="filters.hostname"
           type="text"
-          list="hostname-options"
-          placeholder="Alle Hosts..."
+          placeholder="Eigener Host (optional)…"
           class="rounded px-3 py-2"
           :style="inputStyle"
           @keyup.enter="applyFilters"
         >
-        <datalist id="hostname-options">
-          <option v-for="h in filterOptions.hostnames" :key="h" :value="h" />
-        </datalist>
         <input
           v-model="filters.source"
           type="text"
@@ -230,6 +235,9 @@ const filters = ref({
   search: ''
 })
 
+// Auswahlliste bekannter Hosts (zusätzlich zur freien Eingabe)
+const selectedHostname = ref('')
+
 const filterOptions = ref({
   hostnames: [],
   sources: [],
@@ -287,7 +295,8 @@ async function loadLogs() {
       page: page.value,
       page_size: pageSize
     })
-    if (filters.value.hostname) params.append('hostname', filters.value.hostname)
+    const hostname = filters.value.hostname || selectedHostname.value
+    if (hostname) params.append('hostname', hostname)
     if (filters.value.source) params.append('source', filters.value.source)
     if (filters.value.level) params.append('level', filters.value.level)
     if (filters.value.search) params.append('search', filters.value.search)
@@ -315,7 +324,8 @@ async function showDetail(log) {
 
 function exportLogs(format) {
   const params = new URLSearchParams({ format })
-  if (filters.value.hostname) params.append('hostname', filters.value.hostname)
+  const hostname = filters.value.hostname || selectedHostname.value
+  if (hostname) params.append('hostname', hostname)
   if (filters.value.source) params.append('source', filters.value.source)
   if (filters.value.level) params.append('level', filters.value.level)
   
