@@ -4,7 +4,8 @@ Name:        Philipp Fischer
 Kontakt:     p.fischer@itconex.de
 Version:     2026.02.11.18.30.00
 Beschreibung: LogBot Agent v2026.02.11.18.30.00 - Windows Installer
-              Installiert einen PowerShell-basierten Event Log Forwarder
+              Start per Menue: 1=Install/Update, 2=Tests senden,
+              3=Vollstaendig deinstallieren (Task + Daten, PS1 bleibt)
               Modi: UDP Syslog (klassisch) oder HTTPS (verschluesselt + auth)
 ==============================================================================
 #>
