@@ -7,7 +7,7 @@
 
 <template>
   <div class="p-6">
-    <h1 class="text-2xl font-bold mb-6" :style="{ color: 'var(--color-text-primary)' }">Agents / GerÃ¤te</h1>
+    <h1 class="text-2xl font-bold mb-6" :style="{ color: 'var(--color-text-primary)' }">Agents / Geraete</h1>
     
     <!-- Suche -->
     <div class="rounded-lg shadow p-4 mb-6" :style="cardStyle">
@@ -97,14 +97,14 @@
             class="hover:underline text-sm"
             :style="{ color: 'var(--color-primary)' }"
           >
-            Logs anzeigen â†’
+            Logs anzeigen ->
           </router-link>
           <button
             @click="deleteAgent(agent)"
             class="text-sm hover:opacity-70"
             :style="{ color: 'var(--color-danger)' }"
           >
-            LÃ¶schen
+             Loeschen
           </button>
         </div>
       </div>
@@ -112,8 +112,8 @@
     
     <!-- Leer-Zustand -->
     <div v-if="!loading && !agents.length" class="rounded-lg shadow p-12 text-center" :style="cardStyle">
-      <p :style="{ color: 'var(--color-text-muted)' }">Keine Agents gefunden</p>
-      <p class="text-sm mt-2" :style="{ color: 'var(--color-text-muted)' }">Agents werden automatisch erstellt wenn Logs empfangen werden</p>
+       <p :style="{ color: 'var(--color-text-muted)' }">Keine Agents gefunden</p>
+       <p class="text-sm mt-2" :style="{ color: 'var(--color-text-muted)' }">Agents werden automatisch erstellt wenn Logs empfangen werden</p>
     </div>
     
     <!-- Pagination -->
@@ -124,7 +124,7 @@
         class="px-4 py-2 rounded disabled:opacity-50"
         :style="buttonSecondaryStyle"
       >
-        â† ZurÃ¼ck
+         <- Zurueck
       </button>
       <span class="px-4 py-2" :style="{ color: 'var(--color-text-secondary)' }">Seite {{ page }} von {{ Math.ceil(total / pageSize) }}</span>
       <button
@@ -133,7 +133,7 @@
         class="px-4 py-2 rounded disabled:opacity-50"
         :style="buttonSecondaryStyle"
       >
-        Weiter â†’
+         Weiter ->
       </button>
     </div>
   </div>
@@ -233,7 +233,8 @@ function typeLabel(t) {
 }
 
 function isOnline(agent) {
-  if (agent && agent.is_online !== undefined) return agent.is_online
+  // Bevorzugt Server-Flag; wenn false, erlauben wir einen Client-Fallback (Toleranz bei Zeitdrift)
+  if (agent && agent.is_online === true) return true
   const lastSeen = agent?.last_seen
   if (!lastSeen) return false
   const timeoutMs = offlineTimeout.value * 1000
@@ -247,7 +248,8 @@ function isOnline(agent) {
 
   const time = Date.parse(ts)
   if (!Number.isFinite(time)) return false
-  return time > cutoff
+  const computedOnline = time > cutoff
+  return agent?.is_online === false ? computedOnline : computedOnline
 }
 
 function formatTime(timestamp) {
