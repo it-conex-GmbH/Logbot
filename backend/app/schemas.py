@@ -49,6 +49,8 @@ class AgentResponse(BaseModel):
     last_seen: datetime
     first_seen: datetime
     extra_data: Dict[str, Any] = {}
+    metadata: Dict[str, Any] = {}      # Alias für Frontend
+    is_online: Optional[bool] = None   # Server-seitig berechneter Status
     log_count: Optional[int] = None
     class Config:
         from_attributes = True

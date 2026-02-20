@@ -6,12 +6,13 @@
 # ==============================================================================
 
 import secrets
+from datetime import datetime, timedelta
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
-from ..models import Agent, AgentToken, Log, User
+from ..models import Agent, AgentToken, Log, User, Setting
 from ..schemas import AgentResponse, AgentListResponse, AgentTokenCreate, AgentTokenResponse
 from ..auth import get_current_user
 
@@ -40,8 +41,35 @@ async def list_agents(
     total = (await db.execute(count_query)).scalar() or 0
     offset = (page - 1) * page_size
     result = await db.execute(query.order_by(Agent.last_seen.desc()).offset(offset).limit(page_size))
-    
-    return AgentListResponse(items=result.scalars().all(), total=total, page=page, page_size=page_size)
+
+    # Offline-Timeout aus Settings (Fallback 300s)
+    offline_timeout = 300
+    setting_row = await db.execute(select(Setting).where(Setting.key == "agent_offline_timeout"))
+    s = setting_row.scalar_one_or_none()
+    if s:
+        try:
+            offline_timeout = int(s.value)
+        except Exception:
+            pass
+    cutoff = datetime.utcnow() - timedelta(seconds=offline_timeout)
+
+    items = []
+    for agent in result.scalars().all():
+        is_online = bool(agent.last_seen and agent.last_seen >= cutoff)
+        items.append(AgentResponse(
+            id=agent.id,
+            hostname=agent.hostname,
+            ip_address=agent.ip_address,
+            mac_address=agent.mac_address,
+            device_type=agent.device_type,
+            last_seen=agent.last_seen,
+            first_seen=agent.first_seen,
+            extra_data=getattr(agent, "extra_data", {}) or {},
+            metadata=getattr(agent, "extra_data", {}) or {},
+            is_online=is_online
+        ))
+
+    return AgentListResponse(items=items, total=total, page=page, page_size=page_size)
 
 @router.get("/{agent_id}", response_model=AgentResponse)
 async def get_agent(agent_id: int, db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
@@ -50,11 +78,26 @@ async def get_agent(agent_id: int, db: AsyncSession = Depends(get_db), _=Depends
     if not agent:
         raise HTTPException(status_code=404, detail="Agent nicht gefunden")
     log_count = (await db.execute(select(func.count(Log.id)).where(Log.agent_id == agent_id))).scalar() or 0
+
+    offline_timeout = 300
+    setting_row = await db.execute(select(Setting).where(Setting.key == "agent_offline_timeout"))
+    s = setting_row.scalar_one_or_none()
+    if s:
+        try:
+            offline_timeout = int(s.value)
+        except Exception:
+            pass
+    cutoff = datetime.utcnow() - timedelta(seconds=offline_timeout)
+    is_online = bool(agent.last_seen and agent.last_seen >= cutoff)
+
     return AgentResponse(
         id=agent.id, hostname=agent.hostname, ip_address=agent.ip_address,
         mac_address=agent.mac_address, device_type=agent.device_type,
         last_seen=agent.last_seen, first_seen=agent.first_seen,
-        metadata=agent.metadata or {}, log_count=log_count
+        extra_data=getattr(agent, "extra_data", {}) or {},
+        metadata=getattr(agent, "extra_data", {}) or {},
+        is_online=is_online,
+        log_count=log_count
     )
 
 @router.delete("/{agent_id}", status_code=204)

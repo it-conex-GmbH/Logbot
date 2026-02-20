@@ -54,9 +54,9 @@
           </div>
           <span 
             class="px-2 py-1 text-xs rounded-full"
-            :class="isOnline(agent.last_seen) ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'"
+            :class="isOnline(agent) ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'"
           >
-            {{ isOnline(agent.last_seen) ? 'Online' : 'Offline' }}
+            {{ isOnline(agent) ? 'Online' : 'Offline' }}
           </span>
         </div>
         
@@ -232,12 +232,14 @@ function typeLabel(t) {
   return map[t] || t || 'Unbekannt'
 }
 
-function isOnline(lastSeen) {
+function isOnline(agent) {
+  if (agent && agent.is_online !== undefined) return agent.is_online
+  const lastSeen = agent?.last_seen
   if (!lastSeen) return false
   const timeoutMs = offlineTimeout.value * 1000
   const cutoff = Date.now() - timeoutMs
 
-  let ts = lastSeen.trim()
+  let ts = String(lastSeen).trim()
   // SQLAlchemy liefert oft 'YYYY-MM-DD HH:MM:SS' (ohne 'T' / TZ)
   if (ts.includes(' ')) ts = ts.replace(' ', 'T')
   const hasTZ = /[zZ]|[+-]\d{2}:?\d{2}$/.test(ts)
