@@ -168,6 +168,14 @@ class RetentionResponse(BaseModel):
     oldest_log_date: Optional[datetime] = None
     message: Optional[str] = None
 
+# Database
+class DatabaseSettingsResponse(BaseModel):
+    host: str
+    port: int
+    user: str
+    name: str
+    password: str
+
 # Health
 class HealthResponse(BaseModel):
     status: str

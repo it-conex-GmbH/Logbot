@@ -148,6 +148,61 @@
       </div>
     </div>
     
+    <!-- Datenbank (nur Admin) -->
+    <div v-if="authStore.isAdmin" class="rounded-lg shadow p-6 mt-6" :style="cardStyle">
+      <h2 class="text-lg font-semibold mb-4" :style="{ color: 'var(--color-text-primary)' }">Datenbank</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <p class="text-xs" :style="{ color: 'var(--color-text-muted)' }">Host</p>
+          <p :style="{ color: 'var(--color-text-primary)' }">{{ dbSettings?.host || '-' }}</p>
+        </div>
+        <div>
+          <p class="text-xs" :style="{ color: 'var(--color-text-muted)' }">Port</p>
+          <p :style="{ color: 'var(--color-text-primary)' }">{{ dbSettings?.port || '-' }}</p>
+        </div>
+        <div>
+          <p class="text-xs" :style="{ color: 'var(--color-text-muted)' }">Benutzer</p>
+          <p :style="{ color: 'var(--color-text-primary)' }">{{ dbSettings?.user || '-' }}</p>
+        </div>
+        <div>
+          <p class="text-xs" :style="{ color: 'var(--color-text-muted)' }">Datenbank</p>
+          <p :style="{ color: 'var(--color-text-primary)' }">{{ dbSettings?.name || '-' }}</p>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1" :style="{ color: 'var(--color-text-secondary)' }">Passwort</label>
+        <div class="flex items-center gap-2">
+          <input
+            :type="showDbPassword ? 'text' : 'password'"
+            :value="dbSettings?.password || ''"
+            readonly
+            class="w-full rounded px-3 py-2"
+            :style="inputStyle"
+          >
+          <button
+            type="button"
+            class="px-3 py-2 rounded hover:opacity-80"
+            :style="buttonSecondaryStyle"
+            @click="showDbPassword = !showDbPassword"
+            :disabled="!dbSettings"
+          >
+            {{ showDbPassword ? 'Verbergen' : 'Anzeigen' }}
+          </button>
+          <button
+            type="button"
+            class="px-3 py-2 rounded hover:opacity-80"
+            :style="buttonSecondaryStyle"
+            @click="copyDbPassword"
+            :disabled="!dbSettings?.password"
+          >
+            Kopieren
+          </button>
+        </div>
+        <p v-if="dbCopyMessage" class="text-xs mt-1" :style="{ color: 'var(--color-text-muted)' }">{{ dbCopyMessage }}</p>
+        <p v-if="dbError" class="text-sm mt-2" :style="{ color: 'var(--color-danger)' }">{{ dbError }}</p>
+      </div>
+    </div>
+    
     <!-- Passwort ändern -->
     <div class="rounded-lg shadow p-6 mt-6" :style="cardStyle">
       <h2 class="text-lg font-semibold mb-4" :style="{ color: 'var(--color-text-primary)' }">Passwort ändern</h2>
@@ -205,6 +260,10 @@ const retentionDays = ref(90)
 const retentionPreview = ref(null)
 const newPassword = ref('')
 const confirmPassword = ref('')
+const dbSettings = ref(null)
+const dbError = ref('')
+const dbCopyMessage = ref('')
+const showDbPassword = ref(false)
 const saving = ref(false)
 const saveMessage = ref('')
 const saveError = ref(false)
@@ -246,10 +305,29 @@ onMounted(async () => {
     if (data.settings.log_retention_days) {
       retentionDays.value = data.settings.log_retention_days
     }
+    if (authStore.isAdmin) {
+      await loadDatabaseSettings()
+    }
   } catch (e) {
     console.error('Fehler:', e)
   }
 })
+
+async function loadDatabaseSettings() {
+  dbError.value = ''
+  try {
+    dbSettings.value = await authStore.api('/api/settings/database')
+  } catch (e) {
+    dbError.value = e.message
+  }
+}
+
+async function copyDbPassword() {
+  if (!dbSettings.value?.password) return
+  await navigator.clipboard.writeText(dbSettings.value.password)
+  dbCopyMessage.value = 'Passwort kopiert'
+  setTimeout(() => { dbCopyMessage.value = '' }, 2000)
+}
 
 async function saveAllSettings() {
   saving.value = true

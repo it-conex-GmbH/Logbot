@@ -11,7 +11,8 @@ from sqlalchemy import select, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..models import Setting, Log, User
-from ..schemas import SettingsResponse, SettingUpdate, RetentionResponse
+from ..config import settings as app_settings
+from ..schemas import SettingsResponse, SettingUpdate, RetentionResponse, DatabaseSettingsResponse
 from ..auth import get_current_user, get_current_admin
 
 router = APIRouter(prefix="/api/settings", tags=["Settings"])
@@ -20,6 +21,16 @@ router = APIRouter(prefix="/api/settings", tags=["Settings"])
 async def get_settings(db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
     result = await db.execute(select(Setting))
     return SettingsResponse(settings={s.key: s.value for s in result.scalars().all()})
+
+@router.get("/database", response_model=DatabaseSettingsResponse)
+async def get_database_settings(_=Depends(get_current_admin)):
+    return DatabaseSettingsResponse(
+        host=app_settings.db_host,
+        port=app_settings.db_port,
+        user=app_settings.db_user,
+        name=app_settings.db_name,
+        password=app_settings.db_password or ""
+    )
 
 @router.get("/{key}")
 async def get_setting(key: str, db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
