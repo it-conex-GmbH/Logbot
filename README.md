@@ -36,7 +36,7 @@ sudo bash install.sh
 **Oder manuell:**
 
 ```bash
-tar -xzf logbot-v2026.03.03.17.18.19.tar.gz
+tar -xzf logbot-v2026.03.03.17.18.19tar.gz
 cd logbot-v2026.03.03.17.18.19
 sudo bash install.sh
 ```

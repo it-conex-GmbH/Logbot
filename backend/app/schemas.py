@@ -4,12 +4,10 @@
 # Version:     2026.03.03.17.18.19
 # Beschreibung: LogBot v2026.02.11.18.30.00 - Pydantic Schemas
 # ==============================================================================
-
 from datetime import datetime
 from typing import Optional, List, Any, Dict
 from pydantic import BaseModel, Field
 
-# Auth
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -17,7 +15,6 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
 
-# User
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     email: Optional[str] = None
@@ -39,7 +36,6 @@ class UserResponse(UserBase):
     class Config:
         from_attributes = True
 
-# Agent
 class AgentResponse(BaseModel):
     id: int
     hostname: str
@@ -49,8 +45,8 @@ class AgentResponse(BaseModel):
     last_seen: datetime
     first_seen: datetime
     extra_data: Dict[str, Any] = {}
-    metadata: Dict[str, Any] = {}      # Alias für Frontend
-    is_online: Optional[bool] = None   # Server-seitig berechneter Status
+    metadata: Dict[str, Any] = {}
+    is_online: Optional[bool] = None
     log_count: Optional[int] = None
     class Config:
         from_attributes = True
@@ -61,7 +57,6 @@ class AgentListResponse(BaseModel):
     page: int
     page_size: int
 
-# Log
 class LogResponse(BaseModel):
     id: int
     hostname: Optional[str]
@@ -92,7 +87,6 @@ class LogStatsResponse(BaseModel):
     logs_by_source: Dict[str, int]
     unique_hosts: int
 
-# Webhook
 class WebhookFilters(BaseModel):
     hostname: Optional[str] = None
     source: Optional[str] = None
@@ -127,7 +121,6 @@ class WebhookResponse(WebhookBase):
     class Config:
         from_attributes = True
 
-# Agent Token
 class AgentTokenCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
 
@@ -141,7 +134,6 @@ class AgentTokenResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# Log Ingest (von authentifizierten Agents)
 class LogIngestEntry(BaseModel):
     level: str = Field(default="info")
     source: str = Field(default="unknown")
@@ -155,7 +147,6 @@ class LogIngestResponse(BaseModel):
     accepted: int
     message: str = "ok"
 
-# Settings
 class SettingsResponse(BaseModel):
     settings: Dict[str, Any]
 
@@ -176,7 +167,10 @@ class DatabaseSettingsResponse(BaseModel):
     name: str
     password: str
 
+<<<<<<< HEAD
 # Health
+=======
+>>>>>>> 9a69270 (feat(settings): DB-Passwort-Anzeige + Version 2026.03.03.17.18.19)
 class HealthResponse(BaseModel):
     status: str
     version: str
