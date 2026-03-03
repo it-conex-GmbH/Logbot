@@ -2,8 +2,9 @@
 # Name:        Philipp Fischer
 # Kontakt:     p.fischer@itconex.de
 # Version:     2026.03.03.17.18.19
-# Beschreibung: LogBot v2026.02.11.18.30.00 - Pydantic Schemas
+# Beschreibung: LogBot v2026.03.03.17.18.19 - Pydantic Schemas
 # ==============================================================================
+
 from datetime import datetime
 from typing import Optional, List, Any, Dict
 from pydantic import BaseModel, Field
@@ -167,10 +168,6 @@ class DatabaseSettingsResponse(BaseModel):
     name: str
     password: str
 
-<<<<<<< HEAD
-# Health
-=======
->>>>>>> 9a69270 (feat(settings): DB-Passwort-Anzeige + Version 2026.03.03.17.18.19)
 class HealthResponse(BaseModel):
     status: str
     version: str
