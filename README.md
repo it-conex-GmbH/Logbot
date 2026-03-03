@@ -1,4 +1,4 @@
-# LogBot v2026.02.20.12.00.00
+# LogBot v2026.03.03.17.18.19
 **Zentraler Log-Server für Linux/Windows Systeme und Netzwerkgeräte**
 
 Entwickelt von Philipp Fischer  
@@ -36,8 +36,8 @@ sudo bash install.sh
 **Oder manuell:**
 
 ```bash
-tar -xzf logbot-v2026.02.16.12.00.00.tar.gz
-cd logbot-v2026.02.16.12.00.00
+tar -xzf logbot-v2026.03.03.17.18.19.tar.gz
+cd logbot-v2026.03.03.17.18.19
 sudo bash install.sh
 ```
 
@@ -204,6 +204,9 @@ docker compose exec -T postgres psql -U logbot logbot < backup.sql
 ```
 
 ## Changelog
+
+### v2026.03.03.17.18.19 (2026-03-03)
+- Datenbank-Passwort im Einstellungsbereich (nur Admins) anzeigen/ausblenden/kopieren; neuer API-Endpoint `/api/settings/database`.
 
 ### v2026.02.20 (2026-02-20)
 - **NEU:** Web-UI Seite „Agent Token“ zeigt/erneuert den HTTPS-Agent-Token und Kopierlink.

@@ -1,7 +1,7 @@
 <!-- ==============================================================================
      Name:        Philipp Fischer
      Kontakt:     p.fischer@itconex.de
-     Version:     2026.01.30.19.15.33
+     Version:     2026.03.03.17.18.19
      Beschreibung: LogBot - Einstellungen mit Theme-Support
      ============================================================================== -->
 

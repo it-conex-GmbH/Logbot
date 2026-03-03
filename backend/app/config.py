@@ -1,7 +1,7 @@
 # ==============================================================================
 # Name:        Philipp Fischer
 # Kontakt:     p.fischer@itconex.de
-# Version:     2026.02.20.12.00.00
+# Version:     2026.03.03.17.18.19
 # Beschreibung: LogBot v2026.02.20.12.00.00 - Backend Konfiguration
 # ==============================================================================
 
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440
-    app_version: str = "2026.02.20.12.00.00"
+    app_version: str = "2026.03.03.17.18.19"
     
     @property
     def database_url(self) -> str:
